@@ -1,5 +1,13 @@
 node_modules
-
+.idea/
+cdk.out/
+lib/*.js
+bin/*.js
+test/*.js
+cdk.context.json
+tsconfig.*
+dist
+.jsii
 # CDK asset staging directory
 .cdk.staging
 cdk.out

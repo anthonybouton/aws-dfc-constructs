@@ -19,6 +19,22 @@ export interface SpaDeploymentProps {
      */
     readonly certificateArn: string;
 }
+export interface ReducedCodeCommitActionProps {
+      /**
+     * (experimental) The branch to use.
+     *
+     * @default "master"
+     * @experimental
+     */
+    readonly branch?: string;
+      /**
+     * (experimental) The repository arn to use as a source
+     *
+     * @default "master"
+     * @experimental
+     */
+    readonly repoArn: string;
+  }
 /**
  * @experimental
  */

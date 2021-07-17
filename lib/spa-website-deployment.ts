@@ -8,12 +8,15 @@ import { aws_codepipeline_actions as codepipeline_actions } from "aws-cdk-lib";
 import { aws_codebuild as cb } from "aws-cdk-lib";
 import { aws_certificatemanager as acm } from "aws-cdk-lib";
 import { aws_lambda as lambda } from "aws-cdk-lib";
-import { aws_logs as logs } from 'aws-cdk-lib';
+import { aws_logs as logs } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
+import { aws_codecommit as codecommit } from "aws-cdk-lib";
+import { IPipeline } from "aws-cdk-lib/lib/aws-codepipeline";
 export interface SpaDeploymentProps {
   // Define construct properties here
   readonly siteUrl: string;
-  readonly githubSource: ReducedGitHubSourceActionProps;
+  readonly githubSource?: ReducedGitHubSourceActionProps;
+  readonly codeCommitSource?: ReducedCodeCommitActionProps;
   readonly certificateArn: string;
 }
 export interface ReducedGitHubSourceActionProps {
@@ -41,6 +44,10 @@ export interface ReducedGitHubSourceActionProps {
    */
   readonly oauthToken: SecretValue;
 }
+export interface ReducedCodeCommitActionProps {
+  readonly branch?: string;
+  readonly repoArn: string;
+}
 export const DEFAULT_BUILD_SPEC = {
   version: "0.2",
   phases: {
@@ -64,6 +71,7 @@ export class SpaDeployment extends Construct {
   originAccessIdentity: cf.OriginAccessIdentity | undefined;
   codeBuildProjectCacheBucket: s3.Bucket | undefined;
   codeBuildArtifactsBucket: s3.Bucket | undefined;
+ 
   constructor(scope: Construct, id: string, private props: SpaDeploymentProps) {
     super(scope, id);
 
@@ -185,11 +193,22 @@ export class SpaDeployment extends Construct {
         {
           stageName: "pull",
           actions: [
-            new codepipeline_actions.GitHubSourceAction({
-              ...this.props.githubSource,
-              output: sourceArtifact,
-              actionName: "pull-from-github"
-            })
+            this.props.codeCommitSource
+              ? new codepipeline_actions.CodeCommitSourceAction({
+                  actionName: "pull-from-codecommit",
+                  output: sourceArtifact,
+                  repository:  codecommit.Repository.fromRepositoryArn(
+                    this,
+                    "codecommit-repo",
+                    this.props.codeCommitSource.repoArn
+                  ),
+                  branch: this.props.codeCommitSource.branch
+                })
+              : new codepipeline_actions.GitHubSourceAction({
+                  ...this.props.githubSource!,
+                  output: sourceArtifact,
+                  actionName: "pull-from-github"
+                })
           ]
         },
         {

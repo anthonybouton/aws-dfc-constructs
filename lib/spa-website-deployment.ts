@@ -1,34 +1,15 @@
 import { Duration, SecretValue, Stack } from "aws-cdk-lib";
-import { Certificate } from "aws-cdk-lib/lib/aws-certificatemanager";
-import {
-  CacheCookieBehavior,
-  CacheHeaderBehavior,
-  CachePolicy,
-  CacheQueryStringBehavior,
-  Distribution,
-  HttpVersion,
-  IDistribution,
-  OriginAccessIdentity,
-  PriceClass,
-  ViewerProtocolPolicy
-} from "aws-cdk-lib/lib/aws-cloudfront";
-import { S3Origin } from "aws-cdk-lib/lib/aws-cloudfront-origins";
-import { BuildSpec, PipelineProject, LinuxBuildImage, ComputeType, Cache } from "aws-cdk-lib/lib/aws-codebuild";
-import { Artifact, Pipeline } from "aws-cdk-lib/lib/aws-codepipeline";
-import {
-  S3DeployAction,
-  LambdaInvokeAction,
-  GitHubSourceAction,
-  CodeBuildAction,
-  CacheControl
-} from "aws-cdk-lib/lib/aws-codepipeline-actions";
-import { PolicyStatement, Effect } from "aws-cdk-lib/lib/aws-iam";
-import { Code, Function, Runtime } from "aws-cdk-lib/lib/aws-lambda";
-import { RetentionDays } from "aws-cdk-lib/lib/aws-logs";
-import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption, IBucket } from "aws-cdk-lib/lib/aws-s3";
-
 import { Construct } from "constructs";
-
+import { aws_s3 as s3 } from "aws-cdk-lib";
+import { aws_cloudfront as cf } from "aws-cdk-lib";
+import { aws_cloudfront_origins as cf_origins } from "aws-cdk-lib";
+import { aws_codepipeline as codepipeline } from "aws-cdk-lib";
+import { aws_codepipeline_actions as codepipeline_actions } from "aws-cdk-lib";
+import { aws_codebuild as cb } from "aws-cdk-lib";
+import { aws_certificatemanager as acm } from "aws-cdk-lib";
+import { aws_lambda as lambda } from "aws-cdk-lib";
+import { aws_logs as logs } from 'aws-cdk-lib';
+import { aws_iam as iam } from "aws-cdk-lib";
 export interface SpaDeploymentProps {
   // Define construct properties here
   readonly siteUrl: string;
@@ -60,7 +41,6 @@ export interface ReducedGitHubSourceActionProps {
    */
   readonly oauthToken: SecretValue;
 }
-
 export const DEFAULT_BUILD_SPEC = {
   version: "0.2",
   phases: {
@@ -78,13 +58,12 @@ export const DEFAULT_BUILD_SPEC = {
     "base-directory": "dist"
   }
 };
-
 export class SpaDeployment extends Construct {
-  websiteBucket: IBucket;
-  distribution: IDistribution;
-  originAccessIdentity: OriginAccessIdentity;
-  codeBuildProjectCacheBucket: Bucket;
-  codeBuildArtifactsBucket: Bucket;
+  websiteBucket: s3.Bucket | undefined;
+  distribution: cf.Distribution | undefined;
+  originAccessIdentity: cf.OriginAccessIdentity | undefined;
+  codeBuildProjectCacheBucket: s3.Bucket | undefined;
+  codeBuildArtifactsBucket: s3.Bucket | undefined;
   constructor(scope: Construct, id: string, private props: SpaDeploymentProps) {
     super(scope, id);
 
@@ -96,15 +75,15 @@ export class SpaDeployment extends Construct {
     return this.props.siteUrl.replace(/\./gi, "-");
   }
   setupCloudFront() {
-    this.originAccessIdentity = new OriginAccessIdentity(this, "site-origin-access-identity", {
+    this.originAccessIdentity = new cf.OriginAccessIdentity(this, "site-origin-access-identity", {
       comment: `Identity for ${this.props.siteUrl}`
     });
 
-    this.distribution = new Distribution(this, "site-distribution", {
+    this.distribution = new cf.Distribution(this, "site-distribution", {
       domainNames: [this.props.siteUrl],
-      certificate: Certificate.fromCertificateArn(this, "Certificate", this.props.certificateArn),
+      certificate: acm.Certificate.fromCertificateArn(this, "Certificate", this.props.certificateArn),
       comment: `Distribution for ${this.props.siteUrl}`,
-      httpVersion: HttpVersion.HTTP2,
+      httpVersion: cf.HttpVersion.HTTP2,
       errorResponses: [
         {
           httpStatus: 404,
@@ -117,16 +96,16 @@ export class SpaDeployment extends Construct {
           responsePagePath: "/index.html"
         }
       ],
-      priceClass: PriceClass.PRICE_CLASS_100,
+      priceClass: cf.PriceClass.PRICE_CLASS_100,
       defaultRootObject: "index.html",
       defaultBehavior: {
         compress: true,
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: new CachePolicy(this, "CachePolicy", {
-          queryStringBehavior: CacheQueryStringBehavior.all(),
-          cookieBehavior: CacheCookieBehavior.all(),
+        viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: new cf.CachePolicy(this, "CachePolicy", {
+          queryStringBehavior: cf.CacheQueryStringBehavior.all(),
+          cookieBehavior: cf.CacheCookieBehavior.all(),
           comment: `Default cache policy used for ${this.props.siteUrl}`,
-          headerBehavior: CacheHeaderBehavior.allowList(
+          headerBehavior: cf.CacheHeaderBehavior.allowList(
             "Access-Control-Request-Headers",
             "Access-Control-Request-Method",
             "Origin"
@@ -134,79 +113,79 @@ export class SpaDeployment extends Construct {
           enableAcceptEncodingBrotli: true,
           enableAcceptEncodingGzip: true
         }),
-        origin: new S3Origin(this.websiteBucket, {
+        origin: new cf_origins.S3Origin(this.websiteBucket!, {
           originAccessIdentity: this.originAccessIdentity
         })
       }
     });
-    this.websiteBucket.grantRead(this.originAccessIdentity);
+    this.websiteBucket!.grantRead(this.originAccessIdentity);
   }
   setupBucket() {
-    this.websiteBucket = new Bucket(this, "website-bucket", {
-      encryption: BucketEncryption.S3_MANAGED,
+    this.websiteBucket = new s3.Bucket(this, "website-bucket", {
+      encryption: s3.BucketEncryption.S3_MANAGED,
       bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-website-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
   }
-  private setupCodePipeline() {
-    this.codeBuildProjectCacheBucket = new Bucket(this, "codebuild-cache-bucket", {
-      encryption: BucketEncryption.S3_MANAGED,
+  setupCodePipeline() {
+    this.codeBuildProjectCacheBucket = new s3.Bucket(this, "codebuild-cache-bucket", {
+      encryption: s3.BucketEncryption.S3_MANAGED,
       bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codebuild-cache-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
-    this.codeBuildArtifactsBucket = new Bucket(this, "codebuild-artifacts-bucket", {
-      encryption: BucketEncryption.S3_MANAGED,
+    this.codeBuildArtifactsBucket = new s3.Bucket(this, "codebuild-artifacts-bucket", {
+      encryption: s3.BucketEncryption.S3_MANAGED,
       bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codebuild-artifacts-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
-    let sourceArtifact = new Artifact("source-code");
-    let compiledSite = new Artifact("built-site");
+    let sourceArtifact = new codepipeline.Artifact("source-code");
+    let compiledSite = new codepipeline.Artifact("built-site");
 
-    const project = new PipelineProject(this, `build-project`, {
-      buildSpec: BuildSpec.fromObject(DEFAULT_BUILD_SPEC),
-      cache: Cache.bucket(this.codeBuildProjectCacheBucket),
+    const project = new cb.PipelineProject(this, `build-project`, {
+      buildSpec: cb.BuildSpec.fromObject(DEFAULT_BUILD_SPEC),
+      cache: cb.Cache.bucket(this.codeBuildProjectCacheBucket),
       description: `Codebuild project for ${this.props.siteUrl}`,
       projectName: `${this.acceptableSiteUrl()}-codebuild-project`,
       queuedTimeout: Duration.minutes(5),
       timeout: Duration.minutes(10),
       environment: {
-        buildImage: LinuxBuildImage.AMAZON_LINUX_2_2,
-        computeType: ComputeType.SMALL,
+        buildImage: cb.LinuxBuildImage.AMAZON_LINUX_2_2,
+        computeType: cb.ComputeType.SMALL,
         privileged: true
       }
     });
 
-    const invalidateLambda = new Function(this, "invalidate-function", {
-      code: Code.fromAsset("./lib/handlers/invalidate-cache"),
+    const invalidateLambda = new lambda.Function(this, "invalidate-function", {
+      code: lambda.Code.fromAsset("./lib/handlers/invalidate-cache"),
       environment: {},
       functionName: `invalidate-cloudfront-${this.acceptableSiteUrl()}-${Stack.of(this).region}`,
       handler: "index.handler",
-      logRetention:RetentionDays.ONE_DAY,
-      runtime: Runtime.NODEJS_14_X
+      logRetention: logs.RetentionDays.ONE_DAY,
+      runtime: lambda.Runtime.NODEJS_14_X
     });
 
     invalidateLambda.addToRolePolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         actions: ["codepipeline:PutJobSuccessResult", "cloudfront:CreateInvalidation"],
         resources: ["*"]
       })
     );
 
-    const pipeline = new Pipeline(this, "build-pipeline", {
+    const pipeline = new codepipeline.Pipeline(this, "build-pipeline", {
       artifactBucket: this.codeBuildArtifactsBucket,
       pipelineName: `${this.props.siteUrl.replace(/\./gi, "-")}-build-pipeline`,
       stages: [
         {
           stageName: "pull",
           actions: [
-            new GitHubSourceAction({
+            new codepipeline_actions.GitHubSourceAction({
               ...this.props.githubSource,
               output: sourceArtifact,
               actionName: "pull-from-github"
@@ -216,7 +195,7 @@ export class SpaDeployment extends Construct {
         {
           stageName: "build",
           actions: [
-            new CodeBuildAction({
+            new codepipeline_actions.CodeBuildAction({
               actionName: "build",
               input: sourceArtifact,
               outputs: [compiledSite],
@@ -227,15 +206,15 @@ export class SpaDeployment extends Construct {
         {
           stageName: "deploy",
           actions: [
-            new S3DeployAction({
+            new codepipeline_actions.S3DeployAction({
               actionName: `copy-files`,
               bucket: this.websiteBucket!,
-              cacheControl: [CacheControl.maxAge(Duration.days(7))],
+              cacheControl: [codepipeline_actions.CacheControl.maxAge(Duration.days(7))],
               input: compiledSite,
               runOrder: 1,
-              accessControl: BucketAccessControl.PRIVATE
+              accessControl: s3.BucketAccessControl.PRIVATE
             }),
-            new LambdaInvokeAction({
+            new codepipeline_actions.LambdaInvokeAction({
               actionName: "invalidate-cache",
               lambda: invalidateLambda,
               // @ts-ignore
@@ -247,7 +226,7 @@ export class SpaDeployment extends Construct {
       ]
     });
 
-    this.websiteBucket.grantReadWrite(pipeline.role);
+    this.websiteBucket!.grantReadWrite(pipeline.role);
     this.codeBuildArtifactsBucket.grantReadWrite(pipeline.role);
   }
 }

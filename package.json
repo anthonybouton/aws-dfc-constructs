@@ -45,8 +45,8 @@
     "versionFormat": "short",
     "targets": {
       "dotnet": {
-        "namespace": "DataFunc.Constructs",
-        "packageId": "DataFunc.Constructs"
+        "namespace": "DataFunc.Cdk",
+        "packageId": "DataFunc.Cdk"
       }
     }
   }

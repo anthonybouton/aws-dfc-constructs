@@ -1,0 +1,29 @@
+{
+  "name": "aws-dfc-constructs",
+  "version": "0.1.0",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.2.0",
+    "jsii": "1.31.0",
+    "jsii-pacmak": "1.31.0",
+    "@aws-cdk/assert": "^2.0.0-rc.11",
+    "typescript": "~3.9.7"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "2.0.0-rc.11",
+    "constructs": "^10.0.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.0.0-rc.11",
+    "constructs": "^10.0.0"
+  }
+}

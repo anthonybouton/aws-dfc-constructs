@@ -61,7 +61,7 @@ export interface ReducedGitHubSourceActionProps {
   readonly oauthToken: SecretValue;
 }
 
-let DEFAULT_BUILD_SPEC = {
+export const DEFAULT_BUILD_SPEC = {
   version: "0.2",
   phases: {
     install: {

@@ -1,21 +1,34 @@
 {
   "name": "aws-dfc-constructs",
   "version": "0.1.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/spa-website-deployment.js",
+  "types": "lib/spa-website-deployment.d.ts",
+  "description": "Basically some of my most used constructs available for usage",
+  "author": {
+    "name": "Anthony Bouton",
+    "email": "info@datafunc.be"
+  },
+  "license": "ISC",
+  "repository": {
+    "url": "https://github.com/anthonybouton/aws-dfc-constructs.git"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "jsii -verbose",
+    "build:watch": "jsii -w",
+    "package": "jsii-pacmak",
     "watch": "tsc -w",
-    "test": "jest"
+    "test": "jest",
+    "cdk": "cdk"
   },
   "devDependencies": {
+    "@aws-cdk/assert": "^2.0.0-rc.11",
+    "aws-cdk-lib": "2.0.0-rc.11",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "jest": "^26.4.2",
+    "jsii": "^1.31.0",
+    "jsii-pacmak": "^1.31.0",
     "ts-jest": "^26.2.0",
-    "jsii": "1.31.0",
-    "jsii-pacmak": "1.31.0",
-    "@aws-cdk/assert": "^2.0.0-rc.11",
     "typescript": "~3.9.7"
   },
   "peerDependencies": {
@@ -25,5 +38,16 @@
   "dependencies": {
     "aws-cdk-lib": "2.0.0-rc.11",
     "constructs": "^10.0.0"
+  },
+  "stability": "experimental",
+  "jsii": {
+    "outdir": "dist",
+    "versionFormat": "short",
+    "targets": {
+      "dotnet": {
+        "namespace": "DataFunc.Constructs",
+        "packageId": "DataFunc.Constructs"
+      }
+    }
   }
 }

@@ -255,7 +255,6 @@ export class SpaDeployment extends Stack {
       };
       `),
       environment: {},
-      functionName: `invalidate-cloudfront-${this.acceptableSiteUrl()}-${Stack.of(this).region}`,
       handler: "index.handler",
       logRetention: logs.RetentionDays.ONE_DAY,
       runtime: lambda.Runtime.NODEJS_10_X

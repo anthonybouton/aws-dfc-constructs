@@ -94,7 +94,7 @@ export declare const DEFAULT_BUILD_SPEC: {
     };
     cache: {
         paths: string[];
-    }
+    };
 };
 /**
  * @experimental

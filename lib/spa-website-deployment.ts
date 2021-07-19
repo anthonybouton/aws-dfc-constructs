@@ -102,7 +102,7 @@ export class SpaDeployment extends Stack {
         "codepipeline-pipeline-pipeline-execution-succeeded",
         "codepipeline-pipeline-pipeline-execution-superseded"
       ],
-      name: `${this.acceptableSiteUrl()}${Stack.of(this).region}codestarnotifications`.substring(0, 64),
+      name: `${this.acceptableSiteUrl()}codestarnotifications`.substring(0, 64),
       resource: this.codePipeline!.pipelineArn,
       status: "ENABLED",
       targets: [{ targetType: "AWSChatbotSlack", targetAddress: this.props.chatBotNotificationArn }]
@@ -231,7 +231,7 @@ export class SpaDeployment extends Stack {
       
         // Extract the Job Data
         const job_data = event["CodePipeline.job"]["data"];
-        console.log("job_data:", job_data);
+        console.log("job_data:", JSON.stringify(job_data));
         const distribution_id = job_data.actionConfiguration.configuration.UserParameters;
       
         console.log("invalidating distribution:", distribution_id);

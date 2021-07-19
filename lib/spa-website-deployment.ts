@@ -66,6 +66,9 @@ export const DEFAULT_BUILD_SPEC = {
   artifacts: {
     files: ["**/*"],
     "base-directory": "dist"
+  },
+  cache: {
+    paths: ['/root/.m2/**/*', '/root/.npm/**/*']
   }
 };
 export class SpaDeployment extends Stack {

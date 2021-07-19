@@ -92,6 +92,9 @@ export declare const DEFAULT_BUILD_SPEC: {
         files: string[];
         "base-directory": string;
     };
+    cache: {
+        paths: string[];
+    }
 };
 /**
  * @experimental

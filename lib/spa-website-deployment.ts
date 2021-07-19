@@ -1,4 +1,4 @@
-import { Duration, SecretValue, Stack, StackProps } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
@@ -181,6 +181,7 @@ export class SpaDeployment extends Stack {
     this.websiteBucket = new s3.Bucket(this, "website-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
       publicReadAccess: false,
+      removalPolicy: RemovalPolicy.DESTROY,
       enforceSSL: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
@@ -189,14 +190,18 @@ export class SpaDeployment extends Stack {
     this.codeBuildProjectCacheBucket = new s3.Bucket(this, "codebuild-cache-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
       publicReadAccess: false,
+      removalPolicy: RemovalPolicy.DESTROY,
       enforceSSL: true,
+      lifecycleRules: [{ enabled: true, expiration: Duration.days(14), id: 'AutoDeleteAfterFourteenDays' }],
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
     this.codeBuildArtifactsBucket = new s3.Bucket(this, "codebuild-artifacts-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
       publicReadAccess: false,
+      removalPolicy: RemovalPolicy.DESTROY,
       enforceSSL: true,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      lifecycleRules: [{ enabled: true, expiration: Duration.days(1), id: 'AutoDeleteAfterOneDay' }]
     });
     let sourceArtifact = new codepipeline.Artifact("source-code");
     let compiledSite = new codepipeline.Artifact("built-site");

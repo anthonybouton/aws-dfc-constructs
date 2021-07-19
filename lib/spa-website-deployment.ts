@@ -232,7 +232,7 @@ export class SpaDeployment extends Stack {
         // Extract the Job Data
         const job_data = event["CodePipeline.job"]["data"];
         console.log("job_data:", JSON.stringify(job_data));
-        const distribution_id = job_data.actionConfiguration.configuration.UserParameters;
+        const distribution_id = job_data.actionConfiguration.configuration.UserParameters.distributionId;
       
         console.log("invalidating distribution:", distribution_id);
         await cloudfront
@@ -325,8 +325,7 @@ export class SpaDeployment extends Stack {
             new codepipeline_actions.LambdaInvokeAction({
               actionName: "invalidate-cache",
               lambda: invalidateLambda,
-              // @ts-ignore
-              userParameters: this.distribution?.distributionId,
+              userParameters: { distributionId: this.distribution?.distributionId },
               runOrder: 2
             })
           ]

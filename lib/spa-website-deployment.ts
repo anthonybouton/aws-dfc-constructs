@@ -11,7 +11,6 @@ import { aws_lambda as lambda } from "aws-cdk-lib";
 import { aws_logs as logs } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
 import { aws_codecommit as codecommit } from "aws-cdk-lib";
-import { IPipeline } from "aws-cdk-lib/lib/aws-codepipeline";
 export interface SpaDeploymentProps {
   // Define construct properties here
   readonly siteUrl: string;

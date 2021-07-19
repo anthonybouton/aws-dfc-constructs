@@ -1,4 +1,4 @@
-import { Duration, SecretValue, Stack } from "aws-cdk-lib";
+import {  Duration, SecretValue, Stack } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
@@ -11,13 +11,16 @@ import { aws_lambda as lambda } from "aws-cdk-lib";
 import { aws_logs as logs } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
 import { aws_codecommit as codecommit } from "aws-cdk-lib";
-import { IPipeline } from "aws-cdk-lib/lib/aws-codepipeline";
+import { aws_events as events } from "aws-cdk-lib";
+import { aws_events_targets as event_targets } from "aws-cdk-lib";
+import { aws_codestarnotifications as codestar } from "aws-cdk-lib";
 export interface SpaDeploymentProps {
   // Define construct properties here
   readonly siteUrl: string;
   readonly githubSource?: ReducedGitHubSourceActionProps;
   readonly codeCommitSource?: ReducedCodeCommitActionProps;
   readonly certificateArn: string;
+  readonly chatBotNotificationArn?: string;
 }
 export interface ReducedGitHubSourceActionProps {
   /**
@@ -71,13 +74,57 @@ export class SpaDeployment extends Construct {
   originAccessIdentity: cf.OriginAccessIdentity | undefined;
   codeBuildProjectCacheBucket: s3.Bucket | undefined;
   codeBuildArtifactsBucket: s3.Bucket | undefined;
- 
+  codePipeline: codepipeline.Pipeline | undefined;
+
   constructor(scope: Construct, id: string, private props: SpaDeploymentProps) {
     super(scope, id);
 
     this.setupBucket();
     this.setupCloudFront();
     this.setupCodePipeline();
+    this.setupCodeCommitTriggers();
+    this.setupCodeCommitNotifications();
+  }
+  setupCodeCommitNotifications() {
+    if (!this.props.chatBotNotificationArn || this.props.chatBotNotificationArn.length <= 0){
+      return;
+    }
+    new codestar.CfnNotificationRule(this, "codestar-notifications", {
+      detailType: "BASIC",
+      eventTypeIds: [
+        "codepipeline-pipeline-pipeline-execution-failed",
+        "codepipeline-pipeline-pipeline-execution-canceled",
+        "codepipeline-pipeline-pipeline-execution-started",
+        "codepipeline-pipeline-pipeline-execution-resumed",
+        "codepipeline-pipeline-pipeline-execution-succeeded",
+        "codepipeline-pipeline-pipeline-execution-superseded"
+      ],
+      name: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codestar-notifications`,
+      resource: this.codePipeline!.pipelineArn,
+      status: "ENABLED",
+      targets: [{ targetType: "AWSChatbotSlack", targetAddress: this.props.chatBotNotificationArn }]
+    });
+  }
+  setupCodeCommitTriggers() {
+    if (!this.props.codeCommitSource) {
+      return;
+    }
+    new events.Rule(this, "codecommit-trigger-rule", {
+      enabled: true,
+      description: `Triggers when changes occur on the codecommit repository for ${this.props.siteUrl}`,
+      ruleName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codecommit-rule`,
+      targets: [new event_targets.CodePipeline(this.codePipeline!)],
+      eventPattern: {
+        source: ["aws.codecommit"],
+        detailType: ["CodeCommit Repository State Change"],
+        resources: [this.props.codeCommitSource.repoArn],
+        detail: {
+          event: ["referenceCreated", "referenceUpdated"],
+          referenceType: ["branch"],
+          referenceName: [this.props.codeCommitSource.branch || "master"]
+        }
+      }
+    });
   }
   acceptableSiteUrl(): string {
     return this.props.siteUrl.replace(/\./gi, "-");
@@ -186,7 +233,7 @@ export class SpaDeployment extends Construct {
       })
     );
 
-    const pipeline = new codepipeline.Pipeline(this, "build-pipeline", {
+    this.codePipeline = new codepipeline.Pipeline(this, "build-pipeline", {
       artifactBucket: this.codeBuildArtifactsBucket,
       pipelineName: `${this.props.siteUrl.replace(/\./gi, "-")}-build-pipeline`,
       stages: [
@@ -197,7 +244,7 @@ export class SpaDeployment extends Construct {
               ? new codepipeline_actions.CodeCommitSourceAction({
                   actionName: "pull-from-codecommit",
                   output: sourceArtifact,
-                  repository:  codecommit.Repository.fromRepositoryArn(
+                  repository: codecommit.Repository.fromRepositoryArn(
                     this,
                     "codecommit-repo",
                     this.props.codeCommitSource.repoArn
@@ -245,7 +292,7 @@ export class SpaDeployment extends Construct {
       ]
     });
 
-    this.websiteBucket!.grantReadWrite(pipeline.role);
-    this.codeBuildArtifactsBucket.grantReadWrite(pipeline.role);
+    this.websiteBucket!.grantReadWrite(this.codePipeline.role);
+    this.codeBuildArtifactsBucket.grantReadWrite(this.codePipeline.role);
   }
 }

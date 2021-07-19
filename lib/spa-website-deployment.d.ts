@@ -2,6 +2,7 @@ import { SecretValue } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
+import { aws_codepipeline as codepipeline } from "aws-cdk-lib";
 /**
  * @experimental
  */
@@ -13,28 +14,20 @@ export interface SpaDeploymentProps {
     /**
      * @experimental
      */
-    readonly githubSource: ReducedGitHubSourceActionProps;
+    readonly githubSource?: ReducedGitHubSourceActionProps;
+    /**
+     * @experimental
+     */
+    readonly codeCommitSource?: ReducedCodeCommitActionProps;
     /**
      * @experimental
      */
     readonly certificateArn: string;
+    /**
+     * @experimental
+     */
+    readonly chatBotNotificationArn?: string;
 }
-export interface ReducedCodeCommitActionProps {
-      /**
-     * (experimental) The branch to use.
-     *
-     * @default "master"
-     * @experimental
-     */
-    readonly branch?: string;
-      /**
-     * (experimental) The repository arn to use as a source
-     *
-     * @default "master"
-     * @experimental
-     */
-    readonly repoArn: string;
-  }
 /**
  * @experimental
  */
@@ -69,6 +62,19 @@ export interface ReducedGitHubSourceActionProps {
      * @experimental
      */
     readonly oauthToken: SecretValue;
+}
+/**
+ * @experimental
+ */
+export interface ReducedCodeCommitActionProps {
+    /**
+     * @experimental
+     */
+    readonly branch?: string;
+    /**
+     * @experimental
+     */
+    readonly repoArn: string;
 }
 export declare const DEFAULT_BUILD_SPEC: {
     version: string;
@@ -115,7 +121,19 @@ export declare class SpaDeployment extends Construct {
     /**
      * @experimental
      */
+    codePipeline: codepipeline.Pipeline | undefined;
+    /**
+     * @experimental
+     */
     constructor(scope: Construct, id: string, props: SpaDeploymentProps);
+    /**
+     * @experimental
+     */
+    setupCodeCommitNotifications(): void;
+    /**
+     * @experimental
+     */
+    setupCodeCommitTriggers(): void;
     /**
      * @experimental
      */

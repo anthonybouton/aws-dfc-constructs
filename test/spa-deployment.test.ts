@@ -14,6 +14,13 @@ const defaultProps: SpaDeploymentProps = {
     repo: "fake"
   }
 };
+const codeCommitProps: SpaDeploymentProps = Object.assign({}, defaultProps, {
+  githubSource: undefined,
+  codeCommitSource: {
+    branch: "main",
+    repoArn: "arn:aws:codecommit:us-east-1:1234567:MyDemoRepo"
+  }
+});
 describe("website resources", () => {
   test("It should create the bucket to host the static files", () => {
     const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
@@ -269,25 +276,14 @@ describe("ci cd resources", () => {
     expect(action.props.owner).toBe(defaultProps.githubSource.owner);
   });
   test("It should pass the codecommit credentials to the codepipeline stage", () => {
-    const repositoryArn = "arn:aws:codecommit:us-east-1:1234567:MyDemoRepo";
     const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(
-      stack,
-      TEST_CONSTRUCT_ID,
-      Object.assign({}, defaultProps, {
-        githubSource: undefined,
-        codeCommitSource: {
-          branch: "main",
-          repoArn: repositoryArn
-        }
-      })
-    );
+    new SpaDeployment(stack, TEST_CONSTRUCT_ID, codeCommitProps);
 
     let iConstruct = stack.node.findChild(TEST_CONSTRUCT_ID);
     const codePipeline: Pipeline = iConstruct.node.findChild(`build-pipeline`) as Pipeline;
     const action: CodeCommitSourceAction = codePipeline.stages[0].actions[0] as any;
     // @ts-ignore
-    expect(action.props.repository.repositoryArn).toBe(repositoryArn);
+    expect(action.props.repository.repositoryArn).toBe(codeCommitProps.codeCommitSource?.repoArn);
     // @ts-ignore
     expect(action.props.branch).toBe("main");
   });
@@ -302,5 +298,25 @@ describe("ci cd resources", () => {
         }
       })
     );
+  });
+});
+describe("codepipeline trigger resources", () => {
+  test("It should not create the event rule to trigger codepipeline when github is chosen", () => {
+    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
+    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
+
+    expectCDK(stack).notTo(haveResource("AWS::Events::Rule"));
+  });
+  test("It should create the event rule to trigger codepipeline when codecommit is chosen", () => {
+    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
+    new SpaDeployment(stack, TEST_CONSTRUCT_ID, codeCommitProps);
+
+    expectCDK(stack).to(haveResource("AWS::Events::Rule"));
+  });
+  test("It should not create a codestar notification rule with an empty chatbot destination", () => {
+    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
+    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
+
+    expectCDK(stack).notTo(haveResource("AWS::CodeStarNotifications::NotificationRule"));
   });
 });

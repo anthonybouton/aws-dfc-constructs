@@ -1,4 +1,4 @@
-import {  Duration, SecretValue, Stack, StackProps } from "aws-cdk-lib";
+import { Duration, SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
@@ -86,7 +86,7 @@ export class SpaDeployment extends Stack {
     this.setupCodeCommitNotifications();
   }
   setupCodeCommitNotifications() {
-    if (!this.props.chatBotNotificationArn || this.props.chatBotNotificationArn.length <= 0){
+    if (!this.props.chatBotNotificationArn || this.props.chatBotNotificationArn.length <= 0) {
       return;
     }
     new codestar.CfnNotificationRule(this, "codestar-notifications", {
@@ -99,7 +99,7 @@ export class SpaDeployment extends Stack {
         "codepipeline-pipeline-pipeline-execution-succeeded",
         "codepipeline-pipeline-pipeline-execution-superseded"
       ],
-      name: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codestar-notifications`,
+      name: `${this.acceptableSiteUrl()}${Stack.of(this).region}codestarnotifications`.substring(0, 64),
       resource: this.codePipeline!.pipelineArn,
       status: "ENABLED",
       targets: [{ targetType: "AWSChatbotSlack", targetAddress: this.props.chatBotNotificationArn }]
@@ -112,7 +112,6 @@ export class SpaDeployment extends Stack {
     new events.Rule(this, "codecommit-trigger-rule", {
       enabled: true,
       description: `Triggers when changes occur on the codecommit repository for ${this.props.siteUrl}`,
-      ruleName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codecommit-rule`,
       targets: [new event_targets.CodePipeline(this.codePipeline!)],
       eventPattern: {
         source: ["aws.codecommit"],
@@ -127,7 +126,7 @@ export class SpaDeployment extends Stack {
     });
   }
   acceptableSiteUrl(): string {
-    return this.props.siteUrl.replace(/\./gi, "-");
+    return this.props.siteUrl.replace(/\./gi, "");
   }
   setupCloudFront() {
     this.originAccessIdentity = new cf.OriginAccessIdentity(this, "site-origin-access-identity", {
@@ -277,20 +276,20 @@ export class SpaDeployment extends Stack {
           actions: [
             this.props.codeCommitSource
               ? new codepipeline_actions.CodeCommitSourceAction({
-                  actionName: "pull-from-codecommit",
-                  output: sourceArtifact,
-                  repository: codecommit.Repository.fromRepositoryArn(
-                    this,
-                    "codecommit-repo",
-                    this.props.codeCommitSource.repoArn
-                  ),
-                  branch: this.props.codeCommitSource.branch
-                })
+                actionName: "pull-from-codecommit",
+                output: sourceArtifact,
+                repository: codecommit.Repository.fromRepositoryArn(
+                  this,
+                  "codecommit-repo",
+                  this.props.codeCommitSource.repoArn
+                ),
+                branch: this.props.codeCommitSource.branch
+              })
               : new codepipeline_actions.GitHubSourceAction({
-                  ...this.props.githubSource!,
-                  output: sourceArtifact,
-                  actionName: "pull-from-github"
-                })
+                ...this.props.githubSource!,
+                output: sourceArtifact,
+                actionName: "pull-from-github"
+              })
           ]
         },
         {

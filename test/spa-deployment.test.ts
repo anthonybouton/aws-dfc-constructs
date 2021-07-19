@@ -24,10 +24,10 @@ const codeCommitProps: SpaDeploymentProps = Object.assign({}, defaultProps, {
 describe("website resources", () => {
   test("It should create the bucket to host the static files", () => {
     const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    const deployment = new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
+new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
 
     expectCDK(stack).to(
-      haveResource("AWS::S3::Bucket", {
+      haveResourceLike("AWS::S3::Bucket", {
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -37,7 +37,6 @@ describe("website resources", () => {
             }
           ]
         },
-        BucketName: `${deployment.acceptableSiteUrl()}-${stack.region}-website-bucket`,
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,

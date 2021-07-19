@@ -1,4 +1,4 @@
-import {  Duration, SecretValue, Stack } from "aws-cdk-lib";
+import {  Duration, SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
@@ -14,7 +14,7 @@ import { aws_codecommit as codecommit } from "aws-cdk-lib";
 import { aws_events as events } from "aws-cdk-lib";
 import { aws_events_targets as event_targets } from "aws-cdk-lib";
 import { aws_codestarnotifications as codestar } from "aws-cdk-lib";
-export interface SpaDeploymentProps {
+export interface SpaDeploymentProps extends StackProps {
   // Define construct properties here
   readonly siteUrl: string;
   readonly githubSource?: ReducedGitHubSourceActionProps;
@@ -68,7 +68,7 @@ export const DEFAULT_BUILD_SPEC = {
     "base-directory": "dist"
   }
 };
-export class SpaDeployment extends Construct {
+export class SpaDeployment extends Stack {
   websiteBucket: s3.Bucket | undefined;
   distribution: cf.Distribution | undefined;
   originAccessIdentity: cf.OriginAccessIdentity | undefined;
@@ -77,7 +77,7 @@ export class SpaDeployment extends Construct {
   codePipeline: codepipeline.Pipeline | undefined;
 
   constructor(scope: Construct, id: string, private props: SpaDeploymentProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     this.setupBucket();
     this.setupCloudFront();

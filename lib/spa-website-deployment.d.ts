@@ -1,4 +1,4 @@
-import { SecretValue } from "aws-cdk-lib";
+import { SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import { aws_cloudfront as cf } from "aws-cdk-lib";
@@ -6,7 +6,7 @@ import { aws_codepipeline as codepipeline } from "aws-cdk-lib";
 /**
  * @experimental
  */
-export interface SpaDeploymentProps {
+export interface SpaDeploymentProps extends StackProps {
     /**
      * @experimental
      */
@@ -96,7 +96,7 @@ export declare const DEFAULT_BUILD_SPEC: {
 /**
  * @experimental
  */
-export declare class SpaDeployment extends Construct {
+export declare class SpaDeployment extends Stack {
     private props;
     /**
      * @experimental

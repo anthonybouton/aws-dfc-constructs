@@ -178,7 +178,6 @@ export class SpaDeployment extends Stack {
   setupBucket() {
     this.websiteBucket = new s3.Bucket(this, "website-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
-      bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-website-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
@@ -187,14 +186,12 @@ export class SpaDeployment extends Stack {
   setupCodePipeline() {
     this.codeBuildProjectCacheBucket = new s3.Bucket(this, "codebuild-cache-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
-      bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codebuild-cache-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
     this.codeBuildArtifactsBucket = new s3.Bucket(this, "codebuild-artifacts-bucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
-      bucketName: `${this.acceptableSiteUrl()}-${Stack.of(this).region}-codebuild-artifacts-bucket`,
       publicReadAccess: false,
       enforceSSL: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL

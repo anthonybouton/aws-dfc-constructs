@@ -14,6 +14,7 @@ import { aws_codecommit as codecommit } from "aws-cdk-lib";
 import { aws_events as events } from "aws-cdk-lib";
 import { aws_events_targets as event_targets } from "aws-cdk-lib";
 import { aws_codestarnotifications as codestar } from "aws-cdk-lib";
+import { Repository } from "aws-cdk-lib/lib/aws-codecommit";
 export interface SpaDeploymentProps extends StackProps {
   // Define construct properties here
   readonly siteUrl: string;
@@ -49,7 +50,7 @@ export interface ReducedGitHubSourceActionProps {
 }
 export interface ReducedCodeCommitActionProps {
   readonly branch?: string;
-  readonly repoArn: string;
+  readonly repoName: string;
 }
 export const DEFAULT_BUILD_SPEC = {
   version: "0.2",
@@ -78,9 +79,12 @@ export class SpaDeployment extends Stack {
   codeBuildProjectCacheBucket: s3.Bucket | undefined;
   codeBuildArtifactsBucket: s3.Bucket | undefined;
   codePipeline: codepipeline.Pipeline | undefined;
+  codeCommitSource: codecommit.IRepository | undefined;
 
   constructor(scope: Construct, id: string, private props: SpaDeploymentProps) {
     super(scope, id, props);
+
+    this.codeCommitSource = this.props.codeCommitSource ? Repository.fromRepositoryName(this, 'repository', this.props.codeCommitSource.repoName) : undefined;
 
     this.setupBucket();
     this.setupCloudFront();
@@ -109,7 +113,7 @@ export class SpaDeployment extends Stack {
     });
   }
   setupCodeCommitTriggers() {
-    if (!this.props.codeCommitSource) {
+    if (!this.codeCommitSource) {
       return;
     }
     new events.Rule(this, "codecommit-trigger-rule", {
@@ -119,11 +123,11 @@ export class SpaDeployment extends Stack {
       eventPattern: {
         source: ["aws.codecommit"],
         detailType: ["CodeCommit Repository State Change"],
-        resources: [this.props.codeCommitSource.repoArn],
+        resources: [this.codeCommitSource.repositoryArn],
         detail: {
           event: ["referenceCreated", "referenceUpdated"],
           referenceType: ["branch"],
-          referenceName: [this.props.codeCommitSource.branch || "master"]
+          referenceName: [this.props.codeCommitSource!.branch || "master"]
         }
       }
     });
@@ -260,7 +264,6 @@ export class SpaDeployment extends Stack {
         };
       };
       `),
-      environment: {},
       handler: "index.handler",
       logRetention: logs.RetentionDays.ONE_DAY,
       runtime: lambda.Runtime.NODEJS_10_X
@@ -274,23 +277,22 @@ export class SpaDeployment extends Stack {
       })
     );
 
+
+
+
     this.codePipeline = new codepipeline.Pipeline(this, "build-pipeline", {
       artifactBucket: this.codeBuildArtifactsBucket,
-      pipelineName: `${this.props.siteUrl.replace(/\./gi, "-")}-build-pipeline`,
+      pipelineName: `${this.acceptableSiteUrl()}-build-pipeline`,
       stages: [
         {
           stageName: "pull",
           actions: [
-            this.props.codeCommitSource
+            this.codeCommitSource
               ? new codepipeline_actions.CodeCommitSourceAction({
                 actionName: "pull-from-codecommit",
                 output: sourceArtifact,
-                repository: codecommit.Repository.fromRepositoryArn(
-                  this,
-                  "codecommit-repo",
-                  this.props.codeCommitSource.repoArn
-                ),
-                branch: this.props.codeCommitSource.branch
+                repository: this.codeCommitSource,
+                branch: this.props.codeCommitSource!.branch
               })
               : new codepipeline_actions.GitHubSourceAction({
                 ...this.props.githubSource!,

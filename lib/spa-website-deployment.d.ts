@@ -74,7 +74,7 @@ export interface ReducedCodeCommitActionProps {
     /**
      * @experimental
      */
-    readonly repoArn: string;
+    readonly repoName: string;
 }
 export declare const DEFAULT_BUILD_SPEC: {
     version: string;

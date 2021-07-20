@@ -1,4 +1,4 @@
-import { App, SecretValue, Stack } from "aws-cdk-lib";
+import { App, SecretValue } from "aws-cdk-lib";
 import { SpaDeployment, SpaDeploymentProps, DEFAULT_BUILD_SPEC } from "../lib/spa-website-deployment";
 import { expect as expectCDK, haveResource, haveResourceLike } from "@aws-cdk/assert";
 import { Pipeline } from "aws-cdk-lib/lib/aws-codepipeline";
@@ -18,14 +18,18 @@ const codeCommitProps: SpaDeploymentProps = Object.assign({}, defaultProps, {
   githubSource: undefined,
   codeCommitSource: {
     branch: "main",
-    repoArn: "arn:aws:codecommit:us-east-1:1234567:MyDemoRepo"
+    repoName: "MyDemoRepo"
   }
 });
+
+function createStack(props: SpaDeploymentProps = defaultProps) {
+  const app = new App();
+  var stack = new SpaDeployment(app, TEST_CONSTRUCT_ID, props);
+  return stack;
+}
 describe("website resources", () => {
   test("It should create the bucket to host the static files", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResourceLike("AWS::S3::Bucket", {
         BucketEncryption: {
@@ -47,19 +51,15 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
     );
   });
   test("It should create an origin access identity", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(haveResource("AWS::CloudFront::CloudFrontOriginAccessIdentity"));
   });
   test("It should create the correct bucket policy ( ssl and oai )", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResource("AWS::S3::BucketPolicy", {
         Bucket: {
-          Ref: "mytestconstructwebsitebucket7ADCA77D"
+          Ref: "websitebucketB3E12673"
         },
         PolicyDocument: {
           Statement: [
@@ -74,14 +74,14 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
               Principal: "*",
               Resource: [
                 {
-                  "Fn::GetAtt": ["mytestconstructwebsitebucket7ADCA77D", "Arn"]
+                  "Fn::GetAtt": ["websitebucketB3E12673", "Arn"]
                 },
                 {
                   "Fn::Join": [
                     "",
                     [
                       {
-                        "Fn::GetAtt": ["mytestconstructwebsitebucket7ADCA77D", "Arn"]
+                        "Fn::GetAtt": ["websitebucketB3E12673", "Arn"]
                       },
                       "/*"
                     ]
@@ -94,19 +94,19 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
               Effect: "Allow",
               Principal: {
                 CanonicalUser: {
-                  "Fn::GetAtt": ["mytestconstructsiteoriginaccessidentity34BB2923", "S3CanonicalUserId"]
+                  "Fn::GetAtt": ["siteoriginaccessidentity29E28E1B", "S3CanonicalUserId"]
                 }
               },
               Resource: [
                 {
-                  "Fn::GetAtt": ["mytestconstructwebsitebucket7ADCA77D", "Arn"]
+                  "Fn::GetAtt": ["websitebucketB3E12673", "Arn"]
                 },
                 {
                   "Fn::Join": [
                     "",
                     [
                       {
-                        "Fn::GetAtt": ["mytestconstructwebsitebucket7ADCA77D", "Arn"]
+                        "Fn::GetAtt": ["websitebucketB3E12673", "Arn"]
                       },
                       "/*"
                     ]
@@ -121,9 +121,7 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
     );
   });
   test("It should create the cloudfront distribution", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResourceLike("AWS::CloudFront::Distribution", {
         DistributionConfig: {
@@ -131,7 +129,7 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
           Origins: [
             {
               DomainName: {
-                "Fn::GetAtt": ["mytestconstructwebsitebucket7ADCA77D", "RegionalDomainName"]
+                "Fn::GetAtt": ["websitebucketB3E12673", "RegionalDomainName"]
               },
               S3OriginConfig: {
                 OriginAccessIdentity: {
@@ -140,7 +138,7 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
                     [
                       "origin-access-identity/cloudfront/",
                       {
-                        Ref: "mytestconstructsiteoriginaccessidentity34BB2923"
+                        Ref: "siteoriginaccessidentity29E28E1B"
                       }
                     ]
                   ]
@@ -153,9 +151,7 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
     );
   });
   test("It should create the cloudfront cache policy", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResourceLike("AWS::CloudFront::CachePolicy", {
         CachePolicyConfig: {
@@ -172,9 +168,7 @@ new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
 });
 describe("ci cd resources", () => {
   test("It should create the bucket to host the cached build files", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    const deployment = new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResource("AWS::S3::Bucket", {
         BucketEncryption: {
@@ -186,7 +180,6 @@ describe("ci cd resources", () => {
             }
           ]
         },
-        BucketName: `${deployment.acceptableSiteUrl()}-${stack.region}-codebuild-cache-bucket`,
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -197,9 +190,7 @@ describe("ci cd resources", () => {
     );
   });
   test("It should create the bucket to host the build artifacts", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    const deployment = new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResource("AWS::S3::Bucket", {
         BucketEncryption: {
@@ -211,7 +202,6 @@ describe("ci cd resources", () => {
             }
           ]
         },
-        BucketName: `${deployment.acceptableSiteUrl()}-${stack.region}-codebuild-artifacts-bucket`,
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -222,50 +212,48 @@ describe("ci cd resources", () => {
     );
   });
   test("It should create the lambda to invalidate the cache after building", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    const deployment = new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
-      haveResourceLike("AWS::Lambda::Function", {
-        FunctionName: `invalidate-cloudfront-${deployment.acceptableSiteUrl()}-${stack.region}`
-      })
+      haveResource("AWS::Lambda::Function")
     );
   });
   test("It should create the lambda permissions to invalidate the cache and notify codepipeline", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResourceLike("AWS::IAM::Policy", {
-        Roles: [
-          {
-            Ref: "mytestconstructinvalidatefunctionServiceRole6A623730"
-          }
-        ],
-        PolicyDocument: {
-          Statement: [
+        "PolicyDocument": {
+          "Statement": [
             {
-              Action: ["codepipeline:PutJobSuccessResult", "cloudfront:CreateInvalidation"],
-              Effect: "Allow",
-              Resource: "*"
+              "Action": [
+                "codepipeline:PutJobSuccessResult",
+                "cloudfront:CreateInvalidation"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
             },
             {
-              Action: ["codepipeline:PutJobSuccessResult", "codepipeline:PutJobFailureResult"],
-              Effect: "Allow",
-              Resource: "*"
+              "Action": [
+                "codepipeline:PutJobSuccessResult",
+                "codepipeline:PutJobFailureResult"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
             }
           ],
-          Version: "2012-10-17"
-        }
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "invalidatefunctionServiceRoleDefaultPolicy39B8CCE7",
+        "Roles": [
+          {
+            "Ref": "invalidatefunctionServiceRole178D34E8"
+          }
+        ]
       })
     );
   });
   test("It should pass the github credentials to the codepipeline stage", () => {
-    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
-    let iConstruct = stack.node.findChild(TEST_CONSTRUCT_ID);
-    const codePipeline: Pipeline = iConstruct.node.findChild(`build-pipeline`) as Pipeline;
+    const stack = createStack();
+    const codePipeline: Pipeline = stack.node.findChild(`build-pipeline`) as Pipeline;
     const action: GitHubSourceAction = codePipeline.stages[0].actions[0] as any;
     // @ts-ignore
     expect(action.props.oauthToken).toBe(defaultProps.githubSource.oauthToken);
@@ -275,21 +263,16 @@ describe("ci cd resources", () => {
     expect(action.props.owner).toBe(defaultProps.githubSource.owner);
   });
   test("It should pass the codecommit credentials to the codepipeline stage", () => {
-    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, codeCommitProps);
-
-    let iConstruct = stack.node.findChild(TEST_CONSTRUCT_ID);
-    const codePipeline: Pipeline = iConstruct.node.findChild(`build-pipeline`) as Pipeline;
+    const stack = createStack(codeCommitProps);
+    const codePipeline: Pipeline = stack.node.findChild(`build-pipeline`) as Pipeline;
     const action: CodeCommitSourceAction = codePipeline.stages[0].actions[0] as any;
     // @ts-ignore
-    expect(action.props.repository.repositoryArn).toBe(codeCommitProps.codeCommitSource?.repoArn);
+    expect(action.props.repository.repositoryName).toBe(codeCommitProps.codeCommitSource?.repoName);
     // @ts-ignore
     expect(action.props.branch).toBe("main");
   });
   test("It should create a codebuild project with the default spec", () => {
-    const stack = new Stack(new App(), "testing", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).to(
       haveResourceLike("AWS::CodeBuild::Project", {
         Source: {
@@ -301,21 +284,15 @@ describe("ci cd resources", () => {
 });
 describe("codepipeline trigger resources", () => {
   test("It should not create the event rule to trigger codepipeline when github is chosen", () => {
-    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).notTo(haveResource("AWS::Events::Rule"));
   });
   test("It should create the event rule to trigger codepipeline when codecommit is chosen", () => {
-    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, codeCommitProps);
-
+    const stack = createStack(codeCommitProps);
     expectCDK(stack).to(haveResource("AWS::Events::Rule"));
   });
   test("It should not create a codestar notification rule with an empty chatbot destination", () => {
-    const stack = new Stack(new App(), "test-stack", { env: { region: "us-east-1", account: "1234567" } });
-    new SpaDeployment(stack, TEST_CONSTRUCT_ID, defaultProps);
-
+    const stack = createStack();
     expectCDK(stack).notTo(haveResource("AWS::CodeStarNotifications::NotificationRule"));
   });
 });

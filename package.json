@@ -1,8 +1,8 @@
 {
   "name": "aws-dfc-constructs",
   "version": "0.1.0",
-  "main": "lib/spa-website-deployment.js",
-  "types": "lib/spa-website-deployment.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "description": "Basically some of my most used constructs available for usage",
   "author": {
     "name": "Anthony Bouton",
@@ -40,6 +40,10 @@
     "constructs": "^10.0.0"
   },
   "stability": "experimental",
+  "files": [
+    "lib",
+    ".jsii"
+  ],
   "jsii": {
     "outdir": "dist",
     "versionFormat": "short",

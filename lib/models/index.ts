@@ -1,10 +1,8 @@
 import { SecretValue, StackProps } from "aws-cdk-lib";
-import { ICertificate } from "aws-cdk-lib/lib/aws-certificatemanager";
 import { BuildEnvironmentVariable, BuildSpec, IProject } from "aws-cdk-lib/lib/aws-codebuild";
 import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IBucket } from "aws-cdk-lib/lib/aws-s3";
-
 export interface ReducedGitHubSourceActionProps {
   /**
    * The GitHub account/user that owns the repo.
@@ -57,10 +55,10 @@ export const DEFAULT_ANGULAR_BUILD_SPEC = {
 };
 export interface DotnetMvcLambdaCloudFrontStackProps extends StackProps {
   readonly dotnetHandler: string;
-  readonly codeCommitRepository: IRepository;
+  readonly codeCommitRepositoryName: string;
   readonly customBuildSpec?: BuildSpec | undefined;
   readonly slackChatBotNotificationArn: string;
-  readonly sslCertificate?: ICertificate;
+  readonly sslCertificateArn?: string;
   readonly domainNames?: string[];
   readonly branch: string;
 }

@@ -25,6 +25,8 @@ import { CodeCommitRepositoryChangeTriggerRule } from "../constructs/codecommit-
 import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
 import { CodeStarSlackNotificationRule } from "../constructs/codestar-slack-notification-rule";
 import { DotnetMvcLambdaCloudFrontStackProps } from "../models";
+import { IRepository, Repository } from "aws-cdk-lib/lib/aws-codecommit";
+import { Certificate } from "aws-cdk-lib/lib/aws-certificatemanager";
 
 export class DotnetMvcLambdaStack extends Stack {
   readonly staticAssetsBucket: IBucket;
@@ -36,10 +38,11 @@ export class DotnetMvcLambdaStack extends Stack {
   readonly codePipeline: CompactCodePipeline;
   readonly codeCommitTrigger: CodeCommitRepositoryChangeTriggerRule;
   readonly slackNotificationTrigger: CfnNotificationRule;
+  readonly repository: IRepository;
 
   constructor(scope: Construct, id: string, props: DotnetMvcLambdaCloudFrontStackProps) {
     super(scope, id, props);
-
+    this.repository = Repository.fromRepositoryName(this, "SslCertificateArn", props.codeCommitRepositoryName);
     this.staticAssetsBucket = new SecureBucket(this, "StaticAssetsBucket");
     this.dotnetLambda = new Function(this, "dotnet-mvc-function", {
       code: Code.fromAsset("./dist"),
@@ -56,7 +59,9 @@ export class DotnetMvcLambdaStack extends Stack {
     this.distribution = new Distribution(this, "web-distribution", {
       priceClass: PriceClass.PRICE_CLASS_100,
       domainNames: props.domainNames || undefined,
-      certificate: props.sslCertificate || undefined,
+      certificate: props.sslCertificateArn
+        ? Certificate.fromCertificateArn(this, "SslCertificate", props.sslCertificateArn)
+        : undefined,
       defaultBehavior: {
         cachePolicy: new CachePolicy(this, "cache-policy", {
           enableAcceptEncodingBrotli: true,
@@ -121,7 +126,7 @@ export class DotnetMvcLambdaStack extends Stack {
     this.codePipeline = new CompactCodePipeline(this, "CodePipeline", {
       artifactsBucket: new SecureBucket(this, "ArtifactsBucket"),
       codeBuildProject: this.codebuildProject,
-      codeCommitRepository: props.codeCommitRepository,
+      codeCommitRepository: this.repository,
       sourceBranch: props.branch,
       additionalBuildOutputArtifacts: [publicAssetsArtifacts]
     });
@@ -135,7 +140,7 @@ export class DotnetMvcLambdaStack extends Stack {
 
     this.codeCommitTrigger = new CodeCommitRepositoryChangeTriggerRule(this, "CodeCommitTrigger", {
       branchName: props.branch,
-      codeCommitRepositoryArn: props.codeCommitRepository.repositoryArn,
+      codeCommitRepositoryArn: this.repository.repositoryArn,
       destinationCodePipeLineArn: this.codePipeline.pipelineArn
     });
     this.slackNotificationTrigger = new CodeStarSlackNotificationRule(this, "CodeStarNotificationRule", {

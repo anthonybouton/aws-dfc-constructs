@@ -13,8 +13,8 @@ import { CompactCodePipelineProps } from "..";
 
 
 export const DEPLOYMENT_STAGE_NAME: string = 'deploy';
-export const SOURCE_CODE_ARFTIFACT_NAME: string = 'source-code-artifact';
-export const BUILDED_CODE_ARFTIFACT_NAME: string = 'builded-code-artifact'
+export const SOURCE_CODE_ARFTIFACT_NAME: string = 'sourcecodeartifact';
+export const BUILDED_CODE_ARFTIFACT_NAME: string = 'buildedcodeartifact'
 export class CompactCodePipeline extends cp.Pipeline {
 
   readonly sourceCodeArtifact: Artifact | undefined;

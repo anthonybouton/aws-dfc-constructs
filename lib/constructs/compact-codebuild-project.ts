@@ -3,7 +3,7 @@ import { aws_codebuild as cb, Duration } from 'aws-cdk-lib';
 import { CompactCodeBuildProjectProps } from "..";
 
 
-export class CompactCodeBuildProject extends cb.Project {
+export class CompactCodeBuildProject extends cb.PipelineProject {
   constructor(scope: Construct, id: string, props: CompactCodeBuildProjectProps) {
     super(scope, id, {
       buildSpec: props.buildSpec,

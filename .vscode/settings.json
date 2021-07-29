@@ -1,0 +1,12 @@
+// Workspace settings
+{
+    // The following will hide the js and map files in the editor
+    "files.exclude": {
+        "dist/": true,
+        "**/*.js": true,
+        "tsconfig.*": true,
+        ".jsii": true,
+        "**/*.d.ts": true,
+        "**/*.map": true
+    }
+}

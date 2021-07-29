@@ -2,7 +2,7 @@ import { expect as expectCDK, haveResource, haveResourceLike } from "@aws-cdk/as
 import { Stack } from "aws-cdk-lib";
 import { Repository } from "aws-cdk-lib/lib/aws-codecommit";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
-import { CodePipelineInvalidationFunction, CompactCodePipelineProps, SecureBucket } from "../lib";
+import { BuildSpecProvider, CodePipelineInvalidationFunction, CompactCodePipelineProps, SecureBucket } from "../lib";
 import { CompactCodeBuildProject } from "../lib/constructs/compact-codebuild-project";
 import { CompactCodePipeline } from "../lib/constructs/compact-codepipeline";
 
@@ -13,9 +13,10 @@ describe("Construct creation", () => {
 
     function createStack(props?: CompactCodePipelineProps) {
         var stack = new Stack();
+        var buildSpec = BuildSpecProvider.buildAngularSpec();
         var toUseProps: CompactCodePipelineProps = {
             artifactsBucket: props?.artifactsBucket || new SecureBucket(stack, "artifacts-bucket"),
-            codeBuildProject: props?.codeBuildProject || new CompactCodeBuildProject(stack, CODE_BUILD_NODE_CONSTRUCT_ID),
+            codeBuildProject: props?.codeBuildProject || new CompactCodeBuildProject(stack, CODE_BUILD_NODE_CONSTRUCT_ID, { buildSpec: buildSpec }),
             codeCommitRepository: new Repository(stack, "repository", { repositoryName: 'test-repo' }),
             sourceBranch: 'master',
             additionalBuildOutputArtifacts: props?.additionalBuildOutputArtifacts || undefined

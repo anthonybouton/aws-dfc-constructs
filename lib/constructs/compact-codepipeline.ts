@@ -80,7 +80,6 @@ export class CompactCodePipeline extends cp.Pipeline {
         stageName: DEPLOYMENT_STAGE_NAME
       });
     }
-
     toDeployStage.addAction(new cp_actions.LambdaInvokeAction({
       actionName: name,
       lambda: invalidationFunction,

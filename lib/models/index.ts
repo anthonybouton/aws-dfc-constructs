@@ -96,7 +96,7 @@ export const DEFAULT_DOTNET_5_0_BUILD_SPEC = {
 }
 
 export interface CompactCodeBuildProjectProps {
-  readonly buildSpec: any;
+  readonly buildSpec: BuildSpec;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable; };
   readonly cachingBucket?: IBucket;
 }

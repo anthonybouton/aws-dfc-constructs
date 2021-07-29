@@ -1,16 +1,12 @@
 import { Construct } from "constructs";
 import { aws_codebuild as cb, Duration } from 'aws-cdk-lib';
-import { CompactCodeBuildProjectProps, DEFAULT_ANGULAR_BUILD_SPEC } from "..";
+import { CompactCodeBuildProjectProps } from "..";
 
-
-const defaultProps: CompactCodeBuildProjectProps = {
-  buildSpec: DEFAULT_ANGULAR_BUILD_SPEC,
-}
 
 export class CompactCodeBuildProject extends cb.Project {
-  constructor(scope: Construct, id: string, props: CompactCodeBuildProjectProps = defaultProps) {
+  constructor(scope: Construct, id: string, props: CompactCodeBuildProjectProps) {
     super(scope, id, {
-      buildSpec: cb.BuildSpec.fromObject(props.buildSpec),
+      buildSpec: props.buildSpec,
       queuedTimeout: Duration.minutes(5),
       timeout: Duration.minutes(10),
       concurrentBuildLimit: 1,

@@ -2,20 +2,21 @@ import { expect as expectCDK, haveResource, haveResourceLike } from "@aws-cdk/as
 import { Stack } from "aws-cdk-lib";
 import { BuildEnvironmentVariableType } from "aws-cdk-lib/lib/aws-codebuild";
 import { Bucket } from "aws-cdk-lib/lib/aws-s3";
-import { DEFAULT_ANGULAR_BUILD_SPEC } from "../lib";
+import { BuildSpecProvider } from "../lib";
 import { CompactCodeBuildProject } from "../lib/constructs/compact-codebuild-project";
 
 describe("Construct creation", () => {
     test("It should create the project", () => {
         var stack = new Stack();
-        new CompactCodeBuildProject(stack, 'compact-code-build');
+        var buildSpec = BuildSpecProvider.buildAngularSpec();
+        new CompactCodeBuildProject(stack, 'compact-code-build', { buildSpec: buildSpec });
         expectCDK(stack).to(haveResource("AWS::CodeBuild::Project"));
     });
 
     test("It should assign the caching bucket if present", () => {
         var stack = new Stack();
         var cacheBucket = new Bucket(stack, 'cache-bucket');
-        new CompactCodeBuildProject(stack, 'compact-code-build', { buildSpec: DEFAULT_ANGULAR_BUILD_SPEC, cachingBucket: cacheBucket });
+        new CompactCodeBuildProject(stack, 'compact-code-build', { buildSpec: BuildSpecProvider.buildAngularSpec(), cachingBucket: cacheBucket });
         expectCDK(stack).to(haveResourceLike("AWS::CodeBuild::Project", {
             Cache: {
                 "Location": {
@@ -38,7 +39,7 @@ describe("Construct creation", () => {
     test("It should assign the environment variables if present", () => {
         var stack = new Stack();
         new CompactCodeBuildProject(stack, 'compact-code-build', {
-            buildSpec: DEFAULT_ANGULAR_BUILD_SPEC, buildEnvironmentVariables: {
+            buildSpec: BuildSpecProvider.buildAngularSpec(), buildEnvironmentVariables: {
                 'test': {
                     value: 'tocheckvalue',
                     type: BuildEnvironmentVariableType.PLAINTEXT

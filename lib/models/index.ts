@@ -1,5 +1,5 @@
 import { SecretValue } from "aws-cdk-lib";
-import { BuildEnvironmentVariable, IProject } from "aws-cdk-lib/lib/aws-codebuild";
+import { BuildEnvironmentVariable, BuildSpec, IProject } from "aws-cdk-lib/lib/aws-codebuild";
 import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IBucket } from "aws-cdk-lib/lib/aws-s3";
@@ -94,6 +94,7 @@ export const DEFAULT_DOTNET_5_0_BUILD_SPEC = {
     paths: ['/root/.m2/**/*', '/root/.nuget/**/*']
   }
 }
+
 export interface CompactCodeBuildProjectProps {
   readonly buildSpec: any;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable; };
@@ -110,4 +111,12 @@ export interface CodeStarSlackNotificationRuleProps {
   readonly notificationRuleName: string;
   readonly codePipeLineArn: string;
   readonly chatBotNotificationArn: string;
+}
+export class BuildSpecProvider {
+  static buildDotnetSpec(dotnetVersion: '3.1' | '5.0'): BuildSpec {
+    return BuildSpec.fromObject(dotnetVersion === "3.1" ? DEFAULT_DOTNET_3_1_BUILD_SPEC : DEFAULT_DOTNET_5_0_BUILD_SPEC);
+  }
+  static buildAngularSpec(): BuildSpec {
+    return BuildSpec.fromObject(DEFAULT_ANGULAR_BUILD_SPEC);
+  }
 }

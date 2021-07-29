@@ -75,7 +75,7 @@ export const DEFAULT_ANGULAR_BUILD_SPEC: BuildSpec = {
     paths: ['/root/.m2/**/*', '/root/.npm/**/*']
   }
 }
-export interface AngularCodeBuildProps {
+export interface CompactCodeBuildProjectProps {
   readonly buildSpec: BuildSpec;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable; };
   readonly cachingBucket?: IBucket;

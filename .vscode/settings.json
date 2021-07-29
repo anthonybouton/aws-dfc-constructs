@@ -5,6 +5,7 @@
         "dist/": true,
         "**/*.js": true,
         "tsconfig.*": true,
+        "node_modules":true,
         ".jsii": true,
         "**/*.d.ts": true,
         "**/*.map": true

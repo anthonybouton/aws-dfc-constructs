@@ -1,10 +1,7 @@
 import { Construct } from "constructs";
 import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
-export interface CodeStarSlackNotificationRuleProps {
-    readonly notificationRuleName: string;
-    readonly codePipeLineArn: string;
-    readonly chatBotNotificationArn: string;
-}
+import { CodeStarSlackNotificationRuleProps } from "..";
+
 export class CodeStarSlackNotificationRule extends CfnNotificationRule {
     constructor(scope: Construct, id: string, props: CodeStarSlackNotificationRuleProps) {
         super(scope, id,

@@ -1,5 +1,7 @@
 import { SecretValue } from "aws-cdk-lib";
-import { BuildEnvironmentVariable } from "aws-cdk-lib/lib/aws-codebuild";
+import { BuildEnvironmentVariable, IProject } from "aws-cdk-lib/lib/aws-codebuild";
+import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
+import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IBucket } from "aws-cdk-lib/lib/aws-s3";
 
 export interface ReducedGitHubSourceActionProps {
@@ -31,31 +33,8 @@ export interface ReducedCodeCommitActionProps {
   readonly branch?: string;
   readonly repoName: string;
 }
-export interface BuildSpec {
-  version: string,
-  phases: {
-    install: {
-      "runtime-versions": { [name: string]: string; }
-    },
-    build: {
-      commands: string[]
-    }
-  },
-  artifacts: {
-    files: string[],
-    "base-directory": string,
-    "secondary-artifacts"?: {
-      [name: string]: {
-        files: string[],
-        "base-directory": string,
-      };
-    }
-  },
-  cache: {
-    paths: string[]
-  }
-}
-export const DEFAULT_ANGULAR_BUILD_SPEC: BuildSpec = {
+
+export const DEFAULT_ANGULAR_BUILD_SPEC = {
   version: "0.2",
   phases: {
     install: {
@@ -64,7 +43,7 @@ export const DEFAULT_ANGULAR_BUILD_SPEC: BuildSpec = {
       }
     },
     build: {
-      commands: ["npm install", "npm run build"]
+      commands: ["npm install", "npm install -g @angular/cli", "npm test", "npm run build"]
     }
   },
   artifacts: {
@@ -75,9 +54,60 @@ export const DEFAULT_ANGULAR_BUILD_SPEC: BuildSpec = {
     paths: ['/root/.m2/**/*', '/root/.npm/**/*']
   }
 }
+export const DEFAULT_DOTNET_3_1_BUILD_SPEC = {
+  version: "0.2",
+  phases: {
+    install: {
+      "runtime-versions": {
+        dotnet: "3.1"
+      }
+    },
+    build: {
+      commands: ["dotnet restore", "dotnet test", "dotnet publish -C release -o ./dist -r linux-64 --no-self-contained"]
+    }
+  },
+  artifacts: {
+    files: ["**/*"],
+    "base-directory": "dist"
+  },
+  cache: {
+    paths: ['/root/.m2/**/*', '/root/.nuget/**/*']
+  }
+}
+export const DEFAULT_DOTNET_5_0_BUILD_SPEC = {
+  version: "0.2",
+  phases: {
+    install: {
+      "runtime-versions": {
+        dotnet: "5.0"
+      }
+    },
+    build: {
+      commands: ["dotnet restore", "dotnet test", "dotnet publish -C release -o ./dist -r linux-64 --no-self-contained"]
+    }
+  },
+  artifacts: {
+    files: ["**/*"],
+    "base-directory": "dist"
+  },
+  cache: {
+    paths: ['/root/.m2/**/*', '/root/.nuget/**/*']
+  }
+}
 export interface CompactCodeBuildProjectProps {
-  readonly buildSpec: BuildSpec;
+  readonly buildSpec: any;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable; };
   readonly cachingBucket?: IBucket;
 }
-
+export interface CompactCodePipelineProps {
+  readonly artifactsBucket: IBucket;
+  readonly codeCommitRepository: IRepository;
+  readonly codeBuildProject: IProject;
+  readonly sourceBranch: string;
+  readonly additionalBuildOutputArtifacts?: Artifact[];
+}
+export interface CodeStarSlackNotificationRuleProps {
+  readonly notificationRuleName: string;
+  readonly codePipeLineArn: string;
+  readonly chatBotNotificationArn: string;
+}

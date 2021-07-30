@@ -20,7 +20,7 @@ import { HttpOrigin, S3Origin } from "aws-cdk-lib/lib/aws-cloudfront-origins";
 import { CompactCodeBuildProject } from "../constructs/compact-codebuild-project";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { CompactCodePipeline } from "../constructs/compact-codepipeline";
-import { BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
+import { BuildEnvironmentVariableType, BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
 import { CodePipelineInvalidationFunction } from "../constructs/codepipeline-invalidation-function";
 import { CodeCommitRepositoryChangeTriggerRule } from "../constructs/codecommit-repository-change-trigger-rule";
 import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
@@ -65,7 +65,7 @@ export class DotnetMvcLambdaStack extends Stack {
         ? Certificate.fromCertificateArn(this, "SslCertificate", props.sslCertificateArn)
         : undefined,
       defaultBehavior: {
-        allowedMethods:AllowedMethods.ALLOW_ALL,
+        allowedMethods: AllowedMethods.ALLOW_ALL,
         cachePolicy: new CachePolicy(this, "cache-policy", {
           enableAcceptEncodingBrotli: true,
           enableAcceptEncodingGzip: true,
@@ -89,6 +89,11 @@ export class DotnetMvcLambdaStack extends Stack {
 
     this.codebuildProject = new CompactCodeBuildProject(this, "CodeBuildProject", {
       cachingBucket: new SecureBucket(this, "CodeBuildCachingBucket"),
+      buildEnvironmentVariables: {
+        StaticAssetsBucket: {
+          value: this.staticAssetsBucket.bucketName
+        }
+      },
       buildSpec:
         props.customBuildSpec ||
         BuildSpec.fromObject({
@@ -105,6 +110,13 @@ export class DotnetMvcLambdaStack extends Stack {
                 "dotnet test",
                 "dotnet publish -c release -o ./dist -r linux-x64 --no-self-contained"
               ]
+            },
+            post_build: {
+              commands: [
+                "cp -r dist/wwwroot/assets distAssets",
+                "rm -rf dist/wwwroot",
+                "aws s3 rm s3://$StaticAssetsBucket --recursive"
+              ]
             }
           },
           artifacts: {
@@ -112,10 +124,11 @@ export class DotnetMvcLambdaStack extends Stack {
               buildedcodeartifact: {
                 files: ["**/*"],
                 "base-directory": "dist"
+
               },
               siteAssets: {
                 files: ["**/*"],
-                "base-directory": "dist/wwwroot"
+                "base-directory": "distAssets"
               }
             }
           },
@@ -133,7 +146,11 @@ export class DotnetMvcLambdaStack extends Stack {
       sourceBranch: props.branch,
       additionalBuildOutputArtifacts: [publicAssetsArtifacts]
     });
-
+    if (this.codebuildProject.role){
+      this.staticAssetsBucket.grantDelete(this.codePipeline.role);
+      this.staticAssetsBucket.grantRead(this.codePipeline.role);
+    }
+   
     this.codePipeline.addDeploymentToS3("deploy-public-assets", this.staticAssetsBucket, publicAssetsArtifacts, undefined, Duration.days(31), 1);
     this.codePipeline.addDeploymentToLambda("deploy-mvc-lambda", this.dotnetLambda, 1);
     this.codePipeline.addCloudFrontInvalidation({

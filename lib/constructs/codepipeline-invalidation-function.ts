@@ -58,10 +58,5 @@ export class CodePipelineInvalidationFunction extends lambda.Function {
         resources: ["*"]
       })
     );
-    if (this.logGroup)
-    {
-      let castedLogGroup = this.logGroup as LogGroup;
-      castedLogGroup?.applyRemovalPolicy(RemovalPolicy.DESTROY);
-    }
   }
 }

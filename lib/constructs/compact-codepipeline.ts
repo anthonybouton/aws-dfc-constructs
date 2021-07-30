@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import { aws_codepipeline as cp, Duration } from "aws-cdk-lib";
 import { aws_codepipeline_actions as cp_actions } from "aws-cdk-lib";
 import { BucketAccessControl, IBucket } from "aws-cdk-lib/lib/aws-s3";
-import { CacheControl, CodeCommitSourceAction } from "aws-cdk-lib/lib/aws-codepipeline-actions";
+import { CacheControl, CodeCommitSourceAction, LambdaInvokeActionProps } from "aws-cdk-lib/lib/aws-codepipeline-actions";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IFunction } from "aws-cdk-lib/lib/aws-lambda";
 import { CompactCodePipelineProps } from "..";
@@ -63,7 +63,8 @@ export class CompactCodePipeline extends cp.Pipeline {
     destination: IBucket,
     sourceArtifact: Artifact,
     accessControl = BucketAccessControl.PRIVATE,
-    maxAge = Duration.days(7)
+    maxAge = Duration.days(7),
+    runOrder?: number
   ): void {
     let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
     if (!toDeployStage) {
@@ -76,16 +77,13 @@ export class CompactCodePipeline extends cp.Pipeline {
         bucket: destination,
         input: sourceArtifact,
         actionName: actionName,
+        runOrder,
         accessControl,
         cacheControl: [CacheControl.maxAge(maxAge)]
       })
     );
   }
-  public addCloudFrontInvalidation(
-    invalidationFunction: IFunction,
-    distributionId: string,
-    name: string = "invalidate-cloudfront"
-  ): void {
+  public addCloudFrontInvalidation(invokeProps: LambdaInvokeActionProps, distributionId: string): void {
     let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
     if (!toDeployStage) {
       toDeployStage = this.addStage({
@@ -94,13 +92,12 @@ export class CompactCodePipeline extends cp.Pipeline {
     }
     toDeployStage.addAction(
       new cp_actions.LambdaInvokeAction({
-        actionName: name,
-        lambda: invalidationFunction,
+        ...invokeProps,
         userParameters: { distributionId: distributionId }
       })
     );
   }
-  public addDeploymentToLambda(actionName: string, destinationLambda: IFunction) {
+  public addDeploymentToLambda(actionName: string, destinationLambda: IFunction, runOrder: number | undefined) {
     let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
     if (!toDeployStage) {
       toDeployStage = this.addStage({
@@ -112,6 +109,7 @@ export class CompactCodePipeline extends cp.Pipeline {
       new cp_actions.LambdaInvokeAction({
         actionName: actionName,
         lambda: this.updateLambdaSourceFunction,
+        runOrder,
         inputs: [this.buildedCodeArtifact!],
         userParameters: { LambdaName: destinationLambda.functionName }
       })

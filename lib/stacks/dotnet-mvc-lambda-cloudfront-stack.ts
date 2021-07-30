@@ -130,13 +130,15 @@ export class DotnetMvcLambdaStack extends Stack {
       sourceBranch: props.branch,
       additionalBuildOutputArtifacts: [publicAssetsArtifacts]
     });
-    this.codePipeline.addCloudFrontInvalidation(
-      new CodePipelineInvalidationFunction(this, "CodePipelineCloudFrontInvalidation"),
-      this.distribution.distributionId,
-      "invalidate-cloudfront"
-    );
-    this.codePipeline.addDeploymentToS3("deploy-public-assets", this.staticAssetsBucket, publicAssetsArtifacts);
-    this.codePipeline.addDeploymentToLambda("deploy-mvc-lambda", this.dotnetLambda);
+
+    this.codePipeline.addDeploymentToS3("deploy-public-assets", this.staticAssetsBucket, publicAssetsArtifacts, undefined, Duration.days(31), 1);
+    this.codePipeline.addDeploymentToLambda("deploy-mvc-lambda", this.dotnetLambda, 1);
+    this.codePipeline.addCloudFrontInvalidation({
+      actionName: "invalidate-cloudfront",
+      lambda: new CodePipelineInvalidationFunction(this, "CodePipelineCloudFrontInvalidation"),
+      runOrder: 2
+
+    }, this.distribution.distributionId);
 
     this.codeCommitTrigger = new CodeCommitRepositoryChangeTriggerRule(this, "CodeCommitTrigger", {
       branchName: props.branch,

@@ -6,7 +6,9 @@ import { Code, Function, IFunction, Runtime } from "aws-cdk-lib/lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/lib/aws-logs";
 import { EndpointType, LambdaRestApi } from "aws-cdk-lib/lib/aws-apigateway";
 import {
+  AllowedMethods,
   CacheCookieBehavior,
+  CachedMethods,
   CacheHeaderBehavior,
   CachePolicy,
   CacheQueryStringBehavior,
@@ -64,6 +66,7 @@ export class DotnetMvcLambdaStack extends Stack {
         ? Certificate.fromCertificateArn(this, "SslCertificate", props.sslCertificateArn)
         : undefined,
       defaultBehavior: {
+        allowedMethods:AllowedMethods.ALLOW_ALL,
         cachePolicy: new CachePolicy(this, "cache-policy", {
           enableAcceptEncodingBrotli: true,
           enableAcceptEncodingGzip: true,

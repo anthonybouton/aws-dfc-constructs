@@ -20,7 +20,7 @@ import { HttpOrigin, S3Origin } from "aws-cdk-lib/lib/aws-cloudfront-origins";
 import { CompactCodeBuildProject } from "../constructs/compact-codebuild-project";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { CompactCodePipeline } from "../constructs/compact-codepipeline";
-import {  BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
+import { BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
 import { CodePipelineInvalidationFunction } from "../constructs/codepipeline-invalidation-function";
 import { CodeCommitRepositoryChangeTriggerRule } from "../constructs/codecommit-repository-change-trigger-rule";
 import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
@@ -55,8 +55,9 @@ export class DotnetMvcLambdaStack extends Stack {
       timeout: Duration.seconds(10)
     });
     this.apiGateway = new LambdaRestApi(this, "api-gateway-proxy", {
-      endpointTypes: [EndpointType.EDGE],
-      handler: this.dotnetLambda
+      endpointTypes: [EndpointType.REGIONAL],
+      handler: this.dotnetLambda,
+      binaryMediaTypes: ["~1*"]
     });
     this.distribution = new Distribution(this, "web-distribution", {
       priceClass: PriceClass.PRICE_CLASS_100,
@@ -84,7 +85,7 @@ export class DotnetMvcLambdaStack extends Stack {
       }
     });
     this.originAccessIdentity = new OriginAccessIdentity(this, "origin-access-identity");
-    this.distribution.addBehavior("assets/*", new S3Origin(this.staticAssetsBucket));
+    this.distribution.addBehavior("assets/*", new S3Origin(this.staticAssetsBucket, { originAccessIdentity: this.originAccessIdentity }));
     this.staticAssetsBucket.grantRead(this.originAccessIdentity);
 
     this.codebuildProject = new CompactCodeBuildProject(this, "CodeBuildProject", {
@@ -146,11 +147,11 @@ export class DotnetMvcLambdaStack extends Stack {
       sourceBranch: props.branch,
       additionalBuildOutputArtifacts: [publicAssetsArtifacts]
     });
-    if (this.codebuildProject.role){
+    if (this.codebuildProject.role) {
       this.staticAssetsBucket.grantDelete(this.codebuildProject.role);
       this.staticAssetsBucket.grantRead(this.codebuildProject.role);
     }
-   
+
     this.codePipeline.addDeploymentToS3("deploy-public-assets", this.staticAssetsBucket, publicAssetsArtifacts, undefined, Duration.days(31), 1);
     this.codePipeline.addDeploymentToLambda("deploy-mvc-lambda", this.dotnetLambda, 1);
     this.codePipeline.addCloudFrontInvalidation({

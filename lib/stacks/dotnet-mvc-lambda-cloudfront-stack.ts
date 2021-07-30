@@ -49,6 +49,7 @@ export class DotnetMvcLambdaStack extends Stack {
       handler: props.dotnetHandler,
       logRetention: RetentionDays.ONE_DAY,
       runtime: Runtime.DOTNET_CORE_3_1,
+      memorySize: 2048,
       reservedConcurrentExecutions: 2,
       timeout: Duration.seconds(10)
     });

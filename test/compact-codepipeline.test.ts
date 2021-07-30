@@ -176,7 +176,7 @@ describe("Construct creation", () => {
     const toFindActionName = "invalidate-cloudfront-function";
     var pipeline = stack.node.findChild(CODE_PIPELINE_NODE_CONSTRUCT_ID) as CompactCodePipeline;
     var invalidationFunction = new CodePipelineInvalidationFunction(stack, "invalidation-function");
-    pipeline.addCloudFrontInvalidation(invalidationFunction, "my-test-distribution-id", toFindActionName);
+    pipeline.addCloudFrontInvalidation({actionName: toFindActionName,lambda: invalidationFunction}, toFindActionName);
 
     expectCDK(stack).to(
       haveResourceLike("AWS::CodePipeline::Pipeline", {

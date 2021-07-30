@@ -147,8 +147,8 @@ export class DotnetMvcLambdaStack extends Stack {
       additionalBuildOutputArtifacts: [publicAssetsArtifacts]
     });
     if (this.codebuildProject.role){
-      this.staticAssetsBucket.grantDelete(this.codePipeline.role);
-      this.staticAssetsBucket.grantRead(this.codePipeline.role);
+      this.staticAssetsBucket.grantDelete(this.codebuildProject.role);
+      this.staticAssetsBucket.grantRead(this.codebuildProject.role);
     }
    
     this.codePipeline.addDeploymentToS3("deploy-public-assets", this.staticAssetsBucket, publicAssetsArtifacts, undefined, Duration.days(31), 1);

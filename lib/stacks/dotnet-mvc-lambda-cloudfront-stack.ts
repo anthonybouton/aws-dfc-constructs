@@ -20,7 +20,7 @@ import { HttpOrigin, S3Origin } from "aws-cdk-lib/lib/aws-cloudfront-origins";
 import { CompactCodeBuildProject } from "../constructs/compact-codebuild-project";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { CompactCodePipeline } from "../constructs/compact-codepipeline";
-import { BuildEnvironmentVariableType, BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
+import {  BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
 import { CodePipelineInvalidationFunction } from "../constructs/codepipeline-invalidation-function";
 import { CodeCommitRepositoryChangeTriggerRule } from "../constructs/codecommit-repository-change-trigger-rule";
 import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";

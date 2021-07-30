@@ -9,7 +9,8 @@ export class SecureBucket extends Bucket {
             publicReadAccess: false,
             removalPolicy: RemovalPolicy.DESTROY,
             enforceSSL: true,
-            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            autoDeleteObjects: props.autoDeleteObjects || true
         });
     }
 }

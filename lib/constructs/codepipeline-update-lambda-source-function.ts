@@ -1,7 +1,8 @@
 import { Construct } from "constructs";
-import { aws_lambda as lambda, Duration } from "aws-cdk-lib";
+import { aws_lambda as lambda, CfnDeletionPolicy, Duration, RemovalPolicy } from "aws-cdk-lib";
 import { aws_logs as logs } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
+import { LogGroup } from "aws-cdk-lib/lib/aws-logs";
 
 const defaultProps: lambda.FunctionProps = {
   handler: "index.handler",
@@ -55,5 +56,10 @@ export class CodePipelineUpdateLambdaSourceFunction extends lambda.Function {
         resources: ["*"]
       })
     );
+    if (this.logGroup)
+    {
+      let castedLogGroup = this.logGroup as LogGroup;
+      castedLogGroup?.applyRemovalPolicy(RemovalPolicy.DESTROY);
+    }
   }
 }

@@ -228,7 +228,7 @@ describe("Construct creation", () => {
                     Ref: "invalidationfunction45C3A75F"
                   },
                   UserParameters: JSON.stringify({
-                    distributionId: "my-test-distribution-id"
+                    distributionId: "invalidate-cloudfront-function"
                   })
                 }
               }

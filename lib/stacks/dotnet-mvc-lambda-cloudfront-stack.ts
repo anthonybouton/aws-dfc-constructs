@@ -100,7 +100,7 @@ export class DotnetMvcLambdaStack extends Stack {
               commands: [
                 "dotnet restore",
                 "dotnet test",
-                "dotnet publish -C release -o ./dist -r linux-64 --no-self-contained"
+                "dotnet publish -c release -o ./dist -r linux-64 --no-self-contained"
               ]
             }
           },

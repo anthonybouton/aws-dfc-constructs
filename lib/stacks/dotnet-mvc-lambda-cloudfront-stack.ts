@@ -8,7 +8,6 @@ import { EndpointType, LambdaRestApi } from "aws-cdk-lib/lib/aws-apigateway";
 import {
   AllowedMethods,
   CacheCookieBehavior,
-  CachedMethods,
   CacheHeaderBehavior,
   CachePolicy,
   CacheQueryStringBehavior,

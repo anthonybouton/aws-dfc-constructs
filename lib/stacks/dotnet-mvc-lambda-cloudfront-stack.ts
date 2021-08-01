@@ -114,7 +114,7 @@ export class DotnetMvcLambdaStack extends Stack {
             },
             post_build: {
               commands: [
-                "cp -r dist/wwwroot/assets distAssets",
+                "cp -r dist/wwwroot distAssets",
                 "rm -rf dist/wwwroot",
                 "aws s3 rm s3://$StaticAssetsBucket --recursive"
               ]

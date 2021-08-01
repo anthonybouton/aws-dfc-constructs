@@ -62,6 +62,14 @@ export interface DotnetMvcLambdaCloudFrontStackProps extends StackProps {
   readonly domainNames?: string[];
   readonly branch: string;
 }
+export interface AngularCloudFrontStackProps extends StackProps {
+  readonly codeCommitRepositoryName: string;
+  readonly customBuildSpec?: BuildSpec | undefined;
+  readonly slackChatBotNotificationArn: string;
+  readonly sslCertificateArn?: string;
+  readonly domainNames?: string[];
+  readonly branch: string;
+}
 export interface CompactCodeBuildProjectProps {
   readonly buildSpec: BuildSpec;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable };

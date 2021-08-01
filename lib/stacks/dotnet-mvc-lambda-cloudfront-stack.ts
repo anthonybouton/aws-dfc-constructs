@@ -43,7 +43,7 @@ export class DotnetMvcLambdaStack extends Stack {
 
   constructor(scope: Construct, id: string, props: DotnetMvcLambdaCloudFrontStackProps) {
     super(scope, id, props);
-    this.repository = Repository.fromRepositoryName(this, "SslCertificateArn", props.codeCommitRepositoryName);
+    this.repository = Repository.fromRepositoryName(this, "CodeCommitRepository", props.codeCommitRepositoryName);
     this.staticAssetsBucket = new SecureBucket(this, "StaticAssetsBucket");
     this.dotnetLambda = new Function(this, "dotnet-mvc-function", {
       code: Code.fromAsset("./dist"),

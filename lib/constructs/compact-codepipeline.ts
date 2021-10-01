@@ -7,6 +7,7 @@ import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IFunction } from "aws-cdk-lib/lib/aws-lambda";
 import { CompactCodePipelineProps } from "..";
 import { CodePipelineUpdateLambdaSourceFunction } from "./codepipeline-update-lambda-source-function";
+import { IServerDeploymentGroup } from "aws-cdk-lib/lib/aws-codedeploy";
 
 export const DEPLOYMENT_STAGE_NAME: string = "deploy";
 export const SOURCE_CODE_ARFTIFACT_NAME: string = "sourcecodeartifact";
@@ -80,6 +81,22 @@ export class CompactCodePipeline extends cp.Pipeline {
         runOrder,
         accessControl,
         cacheControl: [CacheControl.maxAge(maxAge)]
+      })
+    );
+  }
+  public addDeploymlentToEc2(actionName: string, deploymentGroup: IServerDeploymentGroup, runOrder: number | undefined): void {
+    let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
+    if (!toDeployStage) {
+      toDeployStage = this.addStage({
+        stageName: DEPLOYMENT_STAGE_NAME
+      });
+    }
+     toDeployStage.addAction(
+      new cp_actions.CodeDeployServerDeployAction({
+        actionName: actionName,
+        deploymentGroup: deploymentGroup,
+        runOrder: runOrder,
+        input: this.buildedCodeArtifact!
       })
     );
   }

@@ -1,5 +1,5 @@
 import { SecretValue, StackProps } from "aws-cdk-lib";
-import { BuildEnvironmentVariable, BuildSpec, IProject } from "aws-cdk-lib/lib/aws-codebuild";
+import { BuildEnvironmentVariable, BuildSpec, IBuildImage, IProject } from "aws-cdk-lib/lib/aws-codebuild";
 import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IBucket } from "aws-cdk-lib/lib/aws-s3";
@@ -74,6 +74,7 @@ export interface CompactCodeBuildProjectProps {
   readonly buildSpec: BuildSpec;
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable };
   readonly cachingBucket?: IBucket;
+  readonly buildImage?: IBuildImage;
 }
 export interface CompactCodePipelineProps {
   readonly artifactsBucket: IBucket;

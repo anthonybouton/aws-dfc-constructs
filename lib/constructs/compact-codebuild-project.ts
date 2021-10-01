@@ -13,7 +13,7 @@ export class CompactCodeBuildProject extends cb.PipelineProject {
       cache: props.cachingBucket ? cb.Cache.bucket(props.cachingBucket) : undefined,
       environmentVariables: props.buildEnvironmentVariables,
       environment: {
-        buildImage: cb.LinuxBuildImage.AMAZON_LINUX_2_3,
+        buildImage: props.buildImage ?? cb.LinuxBuildImage.AMAZON_LINUX_2_3,
         computeType: cb.ComputeType.SMALL,
         privileged: true
       }

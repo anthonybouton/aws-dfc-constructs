@@ -2,6 +2,7 @@ import { SecretValue, StackProps } from "aws-cdk-lib";
 import { BuildEnvironmentVariable, BuildSpec, IBuildImage, IProject } from "aws-cdk-lib/lib/aws-codebuild";
 import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
+import { ILogGroup } from "aws-cdk-lib/lib/aws-logs";
 import { IBucket } from "aws-cdk-lib/lib/aws-s3";
 export interface ReducedGitHubSourceActionProps {
   /**
@@ -75,6 +76,7 @@ export interface CompactCodeBuildProjectProps {
   readonly buildEnvironmentVariables?: { [name: string]: BuildEnvironmentVariable };
   readonly cachingBucket?: IBucket;
   readonly buildImage?: IBuildImage;
+  readonly logGroup?: ILogGroup;
 }
 export interface CompactCodePipelineProps {
   readonly artifactsBucket: IBucket;

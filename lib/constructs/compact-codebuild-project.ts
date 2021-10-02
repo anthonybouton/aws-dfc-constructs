@@ -10,6 +10,12 @@ export class CompactCodeBuildProject extends cb.PipelineProject {
       queuedTimeout: Duration.minutes(5),
       timeout: Duration.minutes(10),
       concurrentBuildLimit: 1,
+      logging: props.logGroup ? {
+        cloudWatch: {
+          enabled: true,
+          logGroup: props.logGroup
+        }
+      } : undefined,
       cache: props.cachingBucket ? cb.Cache.bucket(props.cachingBucket) : undefined,
       environmentVariables: props.buildEnvironmentVariables,
       environment: {

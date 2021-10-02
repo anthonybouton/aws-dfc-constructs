@@ -1,6 +1,6 @@
 {
   "name": "aws-dfc-constructs",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "description": "Basically some of my most used constructs available for usage",
@@ -13,6 +13,7 @@
     "url": "https://github.com/anthonybouton/aws-dfc-constructs.git"
   },
   "scripts": {
+    "deploy": "docker run -it --workdir /workdir --volume %cd%:/workdir --env VERSION=0.3.0 --env BUILD_SOURCE=true --env BUILD_PACKAGES=true udondan/jsii-publish:0.12.0",
     "build": "jsii -verbose",
     "build:watch": "jsii -w",
     "package": "jsii-pacmak",
@@ -21,8 +22,8 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "^2.0.0-rc.11",
-    "aws-cdk-lib": "2.0.0-rc.11",
+    "@aws-cdk/assert": "1.125.0",
+    "aws-cdk-lib": "2.0.0-rc.23",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "jest": "^26.4.2",
@@ -31,17 +32,10 @@
     "ts-jest": "^26.2.0",
     "typescript": "~3.9.7"
   },
-  "peerDependencies": {
-    "aws-cdk-lib": "2.0.0-rc.11",
-    "constructs": "^10.0.0"
-  },
-  "dependencies": {
-    "aws-cdk-lib": "2.0.0-rc.11",
-    "constructs": "^10.0.0"
-  },
   "stability": "experimental",
   "files": [
-    "lib",
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
     ".jsii"
   ],
   "jsii": {
@@ -53,5 +47,13 @@
         "packageId": "DataFunc.Cdk"
       }
     }
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.0.0-rc.23",
+    "constructs": "^10.0.0"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.0.0-rc.23",
+    "constructs": "^10.0.0"
   }
 }

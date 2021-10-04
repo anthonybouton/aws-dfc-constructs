@@ -84,7 +84,7 @@ export class CompactCodePipeline extends cp.Pipeline {
       })
     );
   }
-  public addDeploymlentToEc2(actionName: string, deploymentGroup: IServerDeploymentGroup, runOrder: number | undefined): void {
+  public addDeploymentToEc2(actionName: string, deploymentGroup: IServerDeploymentGroup, runOrder: number | undefined): void {
     let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
     if (!toDeployStage) {
       toDeployStage = this.addStage({

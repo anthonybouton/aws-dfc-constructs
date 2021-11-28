@@ -1,8 +1,8 @@
 import { expect as expectCDK, haveResource, haveResourceLike } from "@aws-cdk/assert";
 import { Stack } from "aws-cdk-lib";
-import { BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
-import { Repository } from "aws-cdk-lib/lib/aws-codecommit";
-import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
+import { BuildSpec } from "aws-cdk-lib/aws-codebuild";
+import { Repository } from "aws-cdk-lib/aws-codecommit";
+import { Artifact } from "aws-cdk-lib/aws-codepipeline";
 import { CodePipelineInvalidationFunction, CompactCodePipelineProps, DEFAULT_ANGULAR_BUILD_SPEC, SecureBucket } from "../lib";
 import { CompactCodeBuildProject } from "../lib/constructs/compact-codebuild-project";
 import { CompactCodePipeline } from "../lib/constructs/compact-codepipeline";

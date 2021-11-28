@@ -1,7 +1,7 @@
 import { expect as expectCDK, haveResource, haveResourceLike } from "@aws-cdk/assert";
 import { Stack } from "aws-cdk-lib";
-import { BuildEnvironmentVariableType, BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
-import { Bucket } from "aws-cdk-lib/lib/aws-s3";
+import { BuildEnvironmentVariableType, BuildSpec } from "aws-cdk-lib/aws-codebuild";
+import { Bucket } from "aws-cdk-lib/aws-s3";
 import { DEFAULT_ANGULAR_BUILD_SPEC } from "../lib";
 import { CompactCodeBuildProject } from "../lib/constructs/compact-codebuild-project";
 

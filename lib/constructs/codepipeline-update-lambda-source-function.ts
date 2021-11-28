@@ -5,7 +5,7 @@ import { aws_iam as iam } from "aws-cdk-lib";
 
 const defaultProps: lambda.FunctionProps = {
   handler: "index.handler",
-  runtime: lambda.Runtime.NODEJS_10_X,
+  runtime: lambda.Runtime.NODEJS_14_X,
   logRetention: logs.RetentionDays.ONE_DAY,
   timeout: Duration.seconds(15),
   code: lambda.Code.fromInline(`

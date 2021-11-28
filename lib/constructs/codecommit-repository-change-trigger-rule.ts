@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import { aws_events_targets } from 'aws-cdk-lib';
-import { IRule, Rule } from "aws-cdk-lib/lib/aws-events";
-import { Pipeline } from "aws-cdk-lib/lib/aws-codepipeline";
+import { IRule, Rule } from "aws-cdk-lib/aws-events";
+import { Pipeline } from "aws-cdk-lib/aws-codepipeline";
 export interface CodeCommitRepositoryChangeTriggerRuleProps {
     readonly destinationCodePipeLineArn: string;
     readonly codeCommitRepositoryArn: string;

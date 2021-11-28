@@ -1,11 +1,10 @@
 import { Duration, Stack } from "aws-cdk-lib";
-import { Certificate } from "aws-cdk-lib/lib/aws-certificatemanager";
-import { AllowedMethods, CacheCookieBehavior, CacheHeaderBehavior, CachePolicy, CacheQueryStringBehavior, Distribution, OriginAccessIdentity, PriceClass, ViewerProtocolPolicy } from "aws-cdk-lib/lib/aws-cloudfront";
-import { S3Origin } from "aws-cdk-lib/lib/aws-cloudfront-origins";
-import { BuildSpec } from "aws-cdk-lib/lib/aws-codebuild";
-import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
-import { IRepository, Repository } from "aws-cdk-lib/lib/aws-codecommit";
-import { BucketAccessControl, IBucket } from "aws-cdk-lib/lib/aws-s3";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+import { AllowedMethods, CacheCookieBehavior, CacheHeaderBehavior, CachePolicy, CacheQueryStringBehavior, Distribution, OriginAccessIdentity, PriceClass, ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { BuildSpec } from "aws-cdk-lib/aws-codebuild";
+import { IRepository, Repository } from "aws-cdk-lib/aws-codecommit";
+import { BucketAccessControl, IBucket } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { CompactCodeBuildProject, CompactCodePipeline, CodeCommitRepositoryChangeTriggerRule, DotnetMvcLambdaCloudFrontStackProps, SecureBucket, CodePipelineInvalidationFunction, CodeStarSlackNotificationRule } from "..";
 
@@ -16,7 +15,7 @@ export class AngularCloudfrontStack extends Stack {
     readonly codebuildProject: CompactCodeBuildProject;
     readonly codePipeline: CompactCodePipeline;
     readonly codeCommitTrigger: CodeCommitRepositoryChangeTriggerRule;
-    readonly slackNotificationTrigger: CfnNotificationRule;
+    readonly slackNotificationTrigger: CodeStarSlackNotificationRule;
     readonly repository: IRepository;
     constructor(scope: Construct, id: string, props: DotnetMvcLambdaCloudFrontStackProps) {
         super(scope, id, props);

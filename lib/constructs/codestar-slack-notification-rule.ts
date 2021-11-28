@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { CfnNotificationRule } from "aws-cdk-lib/lib/aws-codestarnotifications";
+import { CfnNotificationRule } from "aws-cdk-lib/aws-codestarnotifications";
 import { CodeStarSlackNotificationRuleProps } from "..";
 
 export class CodeStarSlackNotificationRule extends CfnNotificationRule {

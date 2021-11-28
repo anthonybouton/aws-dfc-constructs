@@ -1,9 +1,9 @@
 import { SecretValue, StackProps } from "aws-cdk-lib";
-import { BuildEnvironmentVariable, BuildSpec, IBuildImage, IProject } from "aws-cdk-lib/lib/aws-codebuild";
-import { IRepository } from "aws-cdk-lib/lib/aws-codecommit";
-import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
-import { ILogGroup } from "aws-cdk-lib/lib/aws-logs";
-import { IBucket } from "aws-cdk-lib/lib/aws-s3";
+import { BuildEnvironmentVariable, BuildSpec, IBuildImage, IProject } from "aws-cdk-lib/aws-codebuild";
+import { IRepository } from "aws-cdk-lib/aws-codecommit";
+import { Artifact } from "aws-cdk-lib/aws-codepipeline";
+import { ILogGroup } from "aws-cdk-lib/aws-logs";
+import { IBucket } from "aws-cdk-lib/aws-s3";
 export interface ReducedGitHubSourceActionProps {
   /**
    * The GitHub account/user that owns the repo.

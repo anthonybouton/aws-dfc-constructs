@@ -2,12 +2,13 @@ import { Construct } from "constructs";
 import { aws_codepipeline as cp, Duration } from "aws-cdk-lib";
 import { aws_codepipeline_actions as cp_actions } from "aws-cdk-lib";
 import { BucketAccessControl, IBucket } from "aws-cdk-lib/lib/aws-s3";
-import { CacheControl, CodeCommitSourceAction, LambdaInvokeActionProps } from "aws-cdk-lib/lib/aws-codepipeline-actions";
+import { CacheControl, CodeCommitSourceAction, EcsDeployAction, LambdaInvokeActionProps } from "aws-cdk-lib/lib/aws-codepipeline-actions";
 import { Artifact } from "aws-cdk-lib/lib/aws-codepipeline";
 import { IFunction } from "aws-cdk-lib/lib/aws-lambda";
 import { CompactCodePipelineProps } from "..";
 import { CodePipelineUpdateLambdaSourceFunction } from "./codepipeline-update-lambda-source-function";
 import { IServerDeploymentGroup } from "aws-cdk-lib/lib/aws-codedeploy";
+import { IBaseService } from "aws-cdk-lib/lib/aws-ecs";
 
 export const DEPLOYMENT_STAGE_NAME: string = "deploy";
 export const SOURCE_CODE_ARFTIFACT_NAME: string = "sourcecodeartifact";
@@ -91,7 +92,7 @@ export class CompactCodePipeline extends cp.Pipeline {
         stageName: DEPLOYMENT_STAGE_NAME
       });
     }
-     toDeployStage.addAction(
+    toDeployStage.addAction(
       new cp_actions.CodeDeployServerDeployAction({
         actionName: actionName,
         deploymentGroup: deploymentGroup,
@@ -113,6 +114,20 @@ export class CompactCodePipeline extends cp.Pipeline {
         userParameters: { distributionId: distributionId }
       })
     );
+  }
+  public addDeploymentToEcs(actionName: string, ecsService: IBaseService, runOrder: number | undefined) {
+    let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);
+    if (!toDeployStage) {
+      toDeployStage = this.addStage({
+        stageName: DEPLOYMENT_STAGE_NAME
+      });
+    }
+    toDeployStage.addAction(new EcsDeployAction({
+      actionName: actionName,
+      runOrder: runOrder,
+      service: ecsService,
+      input: this.buildedCodeArtifact!,
+    }));
   }
   public addDeploymentToLambda(actionName: string, destinationLambda: IFunction, runOrder: number | undefined) {
     let toDeployStage = this.stages.find((x) => x.stageName == DEPLOYMENT_STAGE_NAME);

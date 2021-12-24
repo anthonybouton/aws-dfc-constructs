@@ -2,13 +2,14 @@ import { Construct } from "constructs";
 import { aws_codepipeline as cp, Duration } from "aws-cdk-lib";
 import { aws_codepipeline_actions as cp_actions } from "aws-cdk-lib";
 import { BucketAccessControl, IBucket } from "aws-cdk-lib/aws-s3";
-import { CacheControl, CodeCommitSourceAction, EcsDeployAction, LambdaInvokeActionProps } from "aws-cdk-lib/aws-codepipeline-actions";
+import { CacheControl, CodeBuildAction, CodeCommitSourceAction, EcsDeployAction, LambdaInvokeActionProps } from "aws-cdk-lib/aws-codepipeline-actions";
 import { Artifact } from "aws-cdk-lib/aws-codepipeline";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { CompactCodePipelineProps } from "..";
 import { CodePipelineUpdateLambdaSourceFunction } from "./codepipeline-update-lambda-source-function";
 import { IServerDeploymentGroup } from "aws-cdk-lib/aws-codedeploy";
 import { IBaseService } from "aws-cdk-lib/aws-ecs";
+import { IProject } from "aws-cdk-lib/aws-codebuild";
 
 export const DEPLOYMENT_STAGE_NAME: string = "deploy";
 export const SOURCE_CODE_ARFTIFACT_NAME: string = "sourcecodeartifact";
@@ -60,6 +61,16 @@ export class CompactCodePipeline extends cp.Pipeline {
     this.buildedCodeArtifact = buildedCodeArtifact;
   }
 
+  public addBuildAction(actionName: string, codebuildProject: IProject, runOrder: number = 1, outputs?: cp.Artifact[]): void {
+    const currentBuildStage = this.stage('build');
+    currentBuildStage.addAction(new CodeBuildAction({
+      actionName: actionName,
+      input: this.sourceCodeArtifact!,
+      project: codebuildProject,
+      runOrder: runOrder,
+      outputs: outputs
+    }));
+  }
   public addDeploymentToS3(
     actionName: string,
     destination: IBucket,

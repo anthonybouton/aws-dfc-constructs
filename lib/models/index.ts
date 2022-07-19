@@ -77,6 +77,7 @@ export interface CompactCodeBuildProjectProps {
   readonly cachingBucket?: IBucket;
   readonly buildImage?: IBuildImage;
   readonly logGroup?: ILogGroup;
+  readonly concurrentBuilds?: number | undefined;
 }
 export interface CompactCodePipelineProps {
   readonly artifactsBucket: IBucket;

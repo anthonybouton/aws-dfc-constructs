@@ -9,7 +9,7 @@ export class CompactCodeBuildProject extends cb.PipelineProject {
       buildSpec: props.buildSpec,
       queuedTimeout: Duration.minutes(5),
       timeout: Duration.minutes(10),
-      concurrentBuildLimit: 1,
+      concurrentBuildLimit: props.concurrentBuilds || 1,
       logging: props.logGroup ? {
         cloudWatch: {
           enabled: true,

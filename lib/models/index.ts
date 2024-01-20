@@ -78,6 +78,7 @@ export interface CompactCodeBuildProjectProps {
   readonly buildImage?: IBuildImage;
   readonly logGroup?: ILogGroup;
   readonly concurrentBuilds?: number | undefined;
+  readonly projectName?: string | undefined;
 }
 export interface CompactCodePipelineProps {
   readonly artifactsBucket: IBucket;
@@ -85,6 +86,7 @@ export interface CompactCodePipelineProps {
   readonly codeBuildProject: IProject;
   readonly sourceBranch: string;
   readonly additionalBuildOutputArtifacts?: Artifact[];
+  readonly pipelineName?: string | undefined;
 }
 export interface CodeStarSlackNotificationRuleProps {
   readonly notificationRuleName: string;

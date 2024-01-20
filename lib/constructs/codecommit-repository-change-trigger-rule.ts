@@ -6,6 +6,7 @@ export interface CodeCommitRepositoryChangeTriggerRuleProps {
     readonly destinationCodePipeLineArn: string;
     readonly codeCommitRepositoryArn: string;
     readonly branchName: string;
+    readonly ruleName?: string | undefined;
 }
 export class CodeCommitRepositoryChangeTriggerRule extends Construct {
     public readonly notificationRule: IRule;
@@ -13,6 +14,7 @@ export class CodeCommitRepositoryChangeTriggerRule extends Construct {
         super(scope, id);
         this.notificationRule = new Rule(this, "codecommit-trigger-rule", {
             enabled: true,
+            ruleName: props.ruleName,
             description: `Triggers when changes occur on the codecommit repository`,
             targets: [new aws_events_targets.CodePipeline(Pipeline.fromPipelineArn(this, 'codepipeline-arn', props.destinationCodePipeLineArn))],
             eventPattern: {

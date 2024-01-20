@@ -9,6 +9,7 @@ export class CompactCodeBuildProject extends cb.PipelineProject {
       buildSpec: props.buildSpec,
       queuedTimeout: Duration.minutes(5),
       timeout: Duration.minutes(10),
+      projectName: props.projectName,
       concurrentBuildLimit: props.concurrentBuilds || 1,
       logging: props.logGroup ? {
         cloudWatch: {
@@ -19,7 +20,7 @@ export class CompactCodeBuildProject extends cb.PipelineProject {
       cache: props.cachingBucket ? cb.Cache.bucket(props.cachingBucket) : undefined,
       environmentVariables: props.buildEnvironmentVariables,
       environment: {
-        buildImage: props.buildImage ?? cb.LinuxBuildImage.AMAZON_LINUX_2_3,
+        buildImage: props.buildImage ?? cb.LinuxBuildImage.AMAZON_LINUX_2_5,
         computeType: cb.ComputeType.SMALL,
         privileged: true
       }

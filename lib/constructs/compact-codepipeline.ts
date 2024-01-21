@@ -27,6 +27,7 @@ export class CompactCodePipeline extends cp.Pipeline {
 
     super(scope, id, {
       artifactBucket: props.artifactsBucket,
+      pipelineName: props.pipelineName,
       stages: [
         {
           stageName: "pull",
